@@ -1,0 +1,149 @@
+syntax = "proto3";
+
+/*
+protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=. ./src/app/game.proto
+*/
+
+enum Player {
+  INVALID = 0;
+  BLUE = 1;
+  RED = 2;
+  GREEN = 3;
+  YELLOW = 4;
+  SKY = 5;
+  VIOLET = 6;
+  ORANGE = 7;
+  PINK = 8;
+  OBSERVER = 9;
+}
+enum WoodType {
+  NO_TYPE = 0;
+  OAK = 1;
+  SPRUCE = 2;
+  BIRCH = 3;
+  JUNGLE = 4;
+  ACACIA = 5;
+  DARK_OAK = 6;
+  MANGROVE = 7;
+  CHERRY = 8;
+  CRIMSON = 9;
+  WARPED = 10;
+}
+enum Direction {
+  NONE = 0;
+  RIGHT = 1;
+  UP = 2;
+  LEFT = 3;
+  DOWN = 4;
+}
+message Door {
+  int32 remaining_open_ticks = 1; // -1: infinite (someone is on a related pressure plate), 0: closed
+  WoodType wood_type = 2;
+  Direction direction = 3; // the door is facing this direction
+}
+
+message CellType {
+  message BedrockCell {}
+  message StoneCell {
+    int32 mine_count = 1;
+    int32 last_mine_tick = 2;
+  }
+  message EmptyCell {
+    Door door = 1;
+  }
+  message PressurePlateCell {
+    WoodType wood_type = 1;
+  }
+  message ChestCell {
+    int32 score = 1;
+  }
+  message InvisibleCell {}
+  oneof cell_type {
+    BedrockCell bedrock_cell = 1;
+    StoneCell stone_cell = 2;
+    EmptyCell empty_cell = 3;
+    PressurePlateCell pressure_plate_cell = 4;
+    ChestCell chest_cell = 5;
+    InvisibleCell invisible_cell = 6;
+  }
+}
+message Cell {
+  repeated Player players = 1;
+  CellType cell_type = 2;
+  bool is_visited = 3;
+}
+message Row {
+  repeated Cell cells = 1;
+}
+message Grid {
+  repeated Row rows = 1;
+}
+message Game {
+  repeated Player players = 1;
+  Player assigned_color = 2;
+  int32 width = 3;
+  int32 height = 4;
+  int32 game_length = 5;
+  int32 current_tick = 6;
+  Grid grid = 7;
+  repeated PlayerRemainingTime remaining_time_info = 8;
+}
+message PlayerRemainingTime {
+  Player player = 1;
+  int32 remaining_time_ms = 2;
+}
+
+message Coordinates {
+  int32 x = 1;
+  int32 y = 2;
+}
+message GridUpdate {
+  message CellUpdate {
+    Coordinates coordinates = 1;
+    Cell cell = 2;
+  }
+  repeated CellUpdate cell_updates = 1;
+}
+message GameRequest {
+  oneof request_type {
+    bool should_act = 1;
+    Game initialize_game = 2;
+    bool tick = 3;
+    GridUpdate grid_update = 4;
+  }
+}
+message Move {
+  Direction direction = 1; // 0 if no move
+}
+message Mine {
+  Direction direction = 1;
+}
+message Action {
+  oneof action {
+    Move move = 1;
+    Mine mine = 2;
+  }
+}
+message Signal {
+  WoodType wood_type = 1;
+}
+message GameResponse {
+  Action action = 1;
+  Signal signal = 2;
+}
+message GameMap {
+  repeated Player players = 1;
+  int32 length_units = 2; // square map
+  Grid grid = 3;
+}
+message GameConfig {
+  message PlayerConfig {
+    Player player = 1;
+    string description = 2;
+    string strategy = 3;
+    string config = 4;
+  }
+  repeated PlayerConfig players = 1;
+  GameMap game_map = 2;
+  int32 game_length = 3;
+}

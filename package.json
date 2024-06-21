@@ -1,0 +1,8 @@
+{
+    "name": "aicomp2023",
+    "version": "0.0.0",
+    "private": true,
+    "dependencies": {
+        "ts-proto": "^1.180.0"
+    }
+}
