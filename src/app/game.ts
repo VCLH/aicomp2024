@@ -178,7 +178,7 @@ export function woodTypeToJSON(object: WoodType): string {
 }
 
 export enum Direction {
-  NONE = 0,
+  NO_DIRECTION = 0,
   RIGHT = 1,
   UP = 2,
   LEFT = 3,
@@ -189,8 +189,8 @@ export enum Direction {
 export function directionFromJSON(object: any): Direction {
   switch (object) {
     case 0:
-    case "NONE":
-      return Direction.NONE;
+    case "NO_DIRECTION":
+      return Direction.NO_DIRECTION;
     case 1:
     case "RIGHT":
       return Direction.RIGHT;
@@ -212,8 +212,8 @@ export function directionFromJSON(object: any): Direction {
 
 export function directionToJSON(object: Direction): string {
   switch (object) {
-    case Direction.NONE:
-      return "NONE";
+    case Direction.NO_DIRECTION:
+      return "NO_DIRECTION";
     case Direction.RIGHT:
       return "RIGHT";
     case Direction.UP:
@@ -269,17 +269,27 @@ export interface CellType_InvisibleCell {
 }
 
 export interface Cell {
-  players: Player[];
-  cellType: CellType | undefined;
-  isVisited: boolean;
+  cellType:
+    | CellType
+    | undefined;
+  /** Cell is not visited If not set or INVALID. */
+  firstVisitPlayer: Player;
 }
 
 export interface Row {
   cells: Cell[];
 }
 
+export interface PlayerInfo {
+  player: Player;
+  position: Coordinates | undefined;
+  signal: Signal | undefined;
+  remainingTimeMs: number;
+}
+
 export interface Grid {
   rows: Row[];
+  playerInfos: PlayerInfo[];
 }
 
 export interface Game {
@@ -290,12 +300,6 @@ export interface Game {
   gameLength: number;
   currentTick: number;
   grid: Grid | undefined;
-  remainingTimeInfo: PlayerRemainingTime[];
-}
-
-export interface PlayerRemainingTime {
-  player: Player;
-  remainingTimeMs: number;
 }
 
 export interface Coordinates {
@@ -305,6 +309,7 @@ export interface Coordinates {
 
 export interface GridUpdate {
   cellUpdates: GridUpdate_CellUpdate[];
+  playerInfoUpdates: PlayerInfo[];
 }
 
 export interface GridUpdate_CellUpdate {
@@ -344,6 +349,7 @@ export interface GameResponse {
 
 export interface GameMap {
   players: Player[];
+  /** square map */
   lengthUnits: number;
   grid: Grid | undefined;
 }
@@ -937,21 +943,16 @@ export const CellType_InvisibleCell = {
 };
 
 function createBaseCell(): Cell {
-  return { players: [], cellType: undefined, isVisited: false };
+  return { cellType: undefined, firstVisitPlayer: 0 };
 }
 
 export const Cell = {
   encode(message: Cell, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    writer.uint32(10).fork();
-    for (const v of message.players) {
-      writer.int32(v);
-    }
-    writer.ldelim();
     if (message.cellType !== undefined) {
       CellType.encode(message.cellType, writer.uint32(18).fork()).ldelim();
     }
-    if (message.isVisited !== false) {
-      writer.uint32(24).bool(message.isVisited);
+    if (message.firstVisitPlayer !== 0) {
+      writer.uint32(24).int32(message.firstVisitPlayer);
     }
     return writer;
   },
@@ -963,23 +964,6 @@ export const Cell = {
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
-        case 1:
-          if (tag === 8) {
-            message.players.push(reader.int32() as any);
-
-            continue;
-          }
-
-          if (tag === 10) {
-            const end2 = reader.uint32() + reader.pos;
-            while (reader.pos < end2) {
-              message.players.push(reader.int32() as any);
-            }
-
-            continue;
-          }
-
-          break;
         case 2:
           if (tag !== 18) {
             break;
@@ -992,7 +976,7 @@ export const Cell = {
             break;
           }
 
-          message.isVisited = reader.bool();
+          message.firstVisitPlayer = reader.int32() as any;
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -1005,22 +989,18 @@ export const Cell = {
 
   fromJSON(object: any): Cell {
     return {
-      players: globalThis.Array.isArray(object?.players) ? object.players.map((e: any) => playerFromJSON(e)) : [],
       cellType: isSet(object.cellType) ? CellType.fromJSON(object.cellType) : undefined,
-      isVisited: isSet(object.isVisited) ? globalThis.Boolean(object.isVisited) : false,
+      firstVisitPlayer: isSet(object.firstVisitPlayer) ? playerFromJSON(object.firstVisitPlayer) : 0,
     };
   },
 
   toJSON(message: Cell): unknown {
     const obj: any = {};
-    if (message.players?.length) {
-      obj.players = message.players.map((e) => playerToJSON(e));
-    }
     if (message.cellType !== undefined) {
       obj.cellType = CellType.toJSON(message.cellType);
     }
-    if (message.isVisited !== false) {
-      obj.isVisited = message.isVisited;
+    if (message.firstVisitPlayer !== 0) {
+      obj.firstVisitPlayer = playerToJSON(message.firstVisitPlayer);
     }
     return obj;
   },
@@ -1030,11 +1010,10 @@ export const Cell = {
   },
   fromPartial<I extends Exact<DeepPartial<Cell>, I>>(object: I): Cell {
     const message = createBaseCell();
-    message.players = object.players?.map((e) => e) || [];
     message.cellType = (object.cellType !== undefined && object.cellType !== null)
       ? CellType.fromPartial(object.cellType)
       : undefined;
-    message.isVisited = object.isVisited ?? false;
+    message.firstVisitPlayer = object.firstVisitPlayer ?? 0;
     return message;
   },
 };
@@ -1096,14 +1075,125 @@ export const Row = {
   },
 };
 
+function createBasePlayerInfo(): PlayerInfo {
+  return { player: 0, position: undefined, signal: undefined, remainingTimeMs: 0 };
+}
+
+export const PlayerInfo = {
+  encode(message: PlayerInfo, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.player !== 0) {
+      writer.uint32(8).int32(message.player);
+    }
+    if (message.position !== undefined) {
+      Coordinates.encode(message.position, writer.uint32(18).fork()).ldelim();
+    }
+    if (message.signal !== undefined) {
+      Signal.encode(message.signal, writer.uint32(26).fork()).ldelim();
+    }
+    if (message.remainingTimeMs !== 0) {
+      writer.uint32(32).int32(message.remainingTimeMs);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PlayerInfo {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePlayerInfo();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.player = reader.int32() as any;
+          continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          message.position = Coordinates.decode(reader, reader.uint32());
+          continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.signal = Signal.decode(reader, reader.uint32());
+          continue;
+        case 4:
+          if (tag !== 32) {
+            break;
+          }
+
+          message.remainingTimeMs = reader.int32();
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PlayerInfo {
+    return {
+      player: isSet(object.player) ? playerFromJSON(object.player) : 0,
+      position: isSet(object.position) ? Coordinates.fromJSON(object.position) : undefined,
+      signal: isSet(object.signal) ? Signal.fromJSON(object.signal) : undefined,
+      remainingTimeMs: isSet(object.remainingTimeMs) ? globalThis.Number(object.remainingTimeMs) : 0,
+    };
+  },
+
+  toJSON(message: PlayerInfo): unknown {
+    const obj: any = {};
+    if (message.player !== 0) {
+      obj.player = playerToJSON(message.player);
+    }
+    if (message.position !== undefined) {
+      obj.position = Coordinates.toJSON(message.position);
+    }
+    if (message.signal !== undefined) {
+      obj.signal = Signal.toJSON(message.signal);
+    }
+    if (message.remainingTimeMs !== 0) {
+      obj.remainingTimeMs = Math.round(message.remainingTimeMs);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<PlayerInfo>, I>>(base?: I): PlayerInfo {
+    return PlayerInfo.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<PlayerInfo>, I>>(object: I): PlayerInfo {
+    const message = createBasePlayerInfo();
+    message.player = object.player ?? 0;
+    message.position = (object.position !== undefined && object.position !== null)
+      ? Coordinates.fromPartial(object.position)
+      : undefined;
+    message.signal = (object.signal !== undefined && object.signal !== null)
+      ? Signal.fromPartial(object.signal)
+      : undefined;
+    message.remainingTimeMs = object.remainingTimeMs ?? 0;
+    return message;
+  },
+};
+
 function createBaseGrid(): Grid {
-  return { rows: [] };
+  return { rows: [], playerInfos: [] };
 }
 
 export const Grid = {
   encode(message: Grid, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     for (const v of message.rows) {
       Row.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    for (const v of message.playerInfos) {
+      PlayerInfo.encode(v!, writer.uint32(18).fork()).ldelim();
     }
     return writer;
   },
@@ -1122,6 +1212,13 @@ export const Grid = {
 
           message.rows.push(Row.decode(reader, reader.uint32()));
           continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          message.playerInfos.push(PlayerInfo.decode(reader, reader.uint32()));
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1132,13 +1229,21 @@ export const Grid = {
   },
 
   fromJSON(object: any): Grid {
-    return { rows: globalThis.Array.isArray(object?.rows) ? object.rows.map((e: any) => Row.fromJSON(e)) : [] };
+    return {
+      rows: globalThis.Array.isArray(object?.rows) ? object.rows.map((e: any) => Row.fromJSON(e)) : [],
+      playerInfos: globalThis.Array.isArray(object?.playerInfos)
+        ? object.playerInfos.map((e: any) => PlayerInfo.fromJSON(e))
+        : [],
+    };
   },
 
   toJSON(message: Grid): unknown {
     const obj: any = {};
     if (message.rows?.length) {
       obj.rows = message.rows.map((e) => Row.toJSON(e));
+    }
+    if (message.playerInfos?.length) {
+      obj.playerInfos = message.playerInfos.map((e) => PlayerInfo.toJSON(e));
     }
     return obj;
   },
@@ -1149,21 +1254,13 @@ export const Grid = {
   fromPartial<I extends Exact<DeepPartial<Grid>, I>>(object: I): Grid {
     const message = createBaseGrid();
     message.rows = object.rows?.map((e) => Row.fromPartial(e)) || [];
+    message.playerInfos = object.playerInfos?.map((e) => PlayerInfo.fromPartial(e)) || [];
     return message;
   },
 };
 
 function createBaseGame(): Game {
-  return {
-    players: [],
-    assignedColor: 0,
-    width: 0,
-    height: 0,
-    gameLength: 0,
-    currentTick: 0,
-    grid: undefined,
-    remainingTimeInfo: [],
-  };
+  return { players: [], assignedColor: 0, width: 0, height: 0, gameLength: 0, currentTick: 0, grid: undefined };
 }
 
 export const Game = {
@@ -1190,9 +1287,6 @@ export const Game = {
     }
     if (message.grid !== undefined) {
       Grid.encode(message.grid, writer.uint32(58).fork()).ldelim();
-    }
-    for (const v of message.remainingTimeInfo) {
-      PlayerRemainingTime.encode(v!, writer.uint32(66).fork()).ldelim();
     }
     return writer;
   },
@@ -1263,13 +1357,6 @@ export const Game = {
 
           message.grid = Grid.decode(reader, reader.uint32());
           continue;
-        case 8:
-          if (tag !== 66) {
-            break;
-          }
-
-          message.remainingTimeInfo.push(PlayerRemainingTime.decode(reader, reader.uint32()));
-          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1288,9 +1375,6 @@ export const Game = {
       gameLength: isSet(object.gameLength) ? globalThis.Number(object.gameLength) : 0,
       currentTick: isSet(object.currentTick) ? globalThis.Number(object.currentTick) : 0,
       grid: isSet(object.grid) ? Grid.fromJSON(object.grid) : undefined,
-      remainingTimeInfo: globalThis.Array.isArray(object?.remainingTimeInfo)
-        ? object.remainingTimeInfo.map((e: any) => PlayerRemainingTime.fromJSON(e))
-        : [],
     };
   },
 
@@ -1317,9 +1401,6 @@ export const Game = {
     if (message.grid !== undefined) {
       obj.grid = Grid.toJSON(message.grid);
     }
-    if (message.remainingTimeInfo?.length) {
-      obj.remainingTimeInfo = message.remainingTimeInfo.map((e) => PlayerRemainingTime.toJSON(e));
-    }
     return obj;
   },
 
@@ -1335,81 +1416,6 @@ export const Game = {
     message.gameLength = object.gameLength ?? 0;
     message.currentTick = object.currentTick ?? 0;
     message.grid = (object.grid !== undefined && object.grid !== null) ? Grid.fromPartial(object.grid) : undefined;
-    message.remainingTimeInfo = object.remainingTimeInfo?.map((e) => PlayerRemainingTime.fromPartial(e)) || [];
-    return message;
-  },
-};
-
-function createBasePlayerRemainingTime(): PlayerRemainingTime {
-  return { player: 0, remainingTimeMs: 0 };
-}
-
-export const PlayerRemainingTime = {
-  encode(message: PlayerRemainingTime, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.player !== 0) {
-      writer.uint32(8).int32(message.player);
-    }
-    if (message.remainingTimeMs !== 0) {
-      writer.uint32(16).int32(message.remainingTimeMs);
-    }
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): PlayerRemainingTime {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBasePlayerRemainingTime();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          if (tag !== 8) {
-            break;
-          }
-
-          message.player = reader.int32() as any;
-          continue;
-        case 2:
-          if (tag !== 16) {
-            break;
-          }
-
-          message.remainingTimeMs = reader.int32();
-          continue;
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): PlayerRemainingTime {
-    return {
-      player: isSet(object.player) ? playerFromJSON(object.player) : 0,
-      remainingTimeMs: isSet(object.remainingTimeMs) ? globalThis.Number(object.remainingTimeMs) : 0,
-    };
-  },
-
-  toJSON(message: PlayerRemainingTime): unknown {
-    const obj: any = {};
-    if (message.player !== 0) {
-      obj.player = playerToJSON(message.player);
-    }
-    if (message.remainingTimeMs !== 0) {
-      obj.remainingTimeMs = Math.round(message.remainingTimeMs);
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<PlayerRemainingTime>, I>>(base?: I): PlayerRemainingTime {
-    return PlayerRemainingTime.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<PlayerRemainingTime>, I>>(object: I): PlayerRemainingTime {
-    const message = createBasePlayerRemainingTime();
-    message.player = object.player ?? 0;
-    message.remainingTimeMs = object.remainingTimeMs ?? 0;
     return message;
   },
 };
@@ -1489,13 +1495,16 @@ export const Coordinates = {
 };
 
 function createBaseGridUpdate(): GridUpdate {
-  return { cellUpdates: [] };
+  return { cellUpdates: [], playerInfoUpdates: [] };
 }
 
 export const GridUpdate = {
   encode(message: GridUpdate, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     for (const v of message.cellUpdates) {
       GridUpdate_CellUpdate.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    for (const v of message.playerInfoUpdates) {
+      PlayerInfo.encode(v!, writer.uint32(18).fork()).ldelim();
     }
     return writer;
   },
@@ -1514,6 +1523,13 @@ export const GridUpdate = {
 
           message.cellUpdates.push(GridUpdate_CellUpdate.decode(reader, reader.uint32()));
           continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          message.playerInfoUpdates.push(PlayerInfo.decode(reader, reader.uint32()));
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1528,6 +1544,9 @@ export const GridUpdate = {
       cellUpdates: globalThis.Array.isArray(object?.cellUpdates)
         ? object.cellUpdates.map((e: any) => GridUpdate_CellUpdate.fromJSON(e))
         : [],
+      playerInfoUpdates: globalThis.Array.isArray(object?.playerInfoUpdates)
+        ? object.playerInfoUpdates.map((e: any) => PlayerInfo.fromJSON(e))
+        : [],
     };
   },
 
@@ -1535,6 +1554,9 @@ export const GridUpdate = {
     const obj: any = {};
     if (message.cellUpdates?.length) {
       obj.cellUpdates = message.cellUpdates.map((e) => GridUpdate_CellUpdate.toJSON(e));
+    }
+    if (message.playerInfoUpdates?.length) {
+      obj.playerInfoUpdates = message.playerInfoUpdates.map((e) => PlayerInfo.toJSON(e));
     }
     return obj;
   },
@@ -1545,6 +1567,7 @@ export const GridUpdate = {
   fromPartial<I extends Exact<DeepPartial<GridUpdate>, I>>(object: I): GridUpdate {
     const message = createBaseGridUpdate();
     message.cellUpdates = object.cellUpdates?.map((e) => GridUpdate_CellUpdate.fromPartial(e)) || [];
+    message.playerInfoUpdates = object.playerInfoUpdates?.map((e) => PlayerInfo.fromPartial(e)) || [];
     return message;
   },
 };

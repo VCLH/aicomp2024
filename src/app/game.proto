@@ -30,11 +30,11 @@ enum WoodType {
   WARPED = 10;
 }
 enum Direction {
-  NONE = -1;
-  RIGHT = 0;
-  UP = 1;
-  LEFT = 2;
-  DOWN = 3;
+  NO_DIRECTION = 0;
+  RIGHT = 1;
+  UP = 2;
+  LEFT = 3;
+  DOWN = 4;
 }
 message Door {
   int32 remaining_open_ticks = 1; // -1: infinite (someone is on a related pressure plate), 0: closed
@@ -68,15 +68,21 @@ message CellType {
   }
 }
 message Cell {
-  repeated Player players = 1;
   CellType cell_type = 2;
-  bool is_visited = 3;
+  Player first_visit_player = 3; // Cell is not visited If not set or INVALID.
 }
 message Row {
   repeated Cell cells = 1;
 }
+message PlayerInfo {
+  Player player = 1;
+  Coordinates position = 2;
+  Signal signal = 3;
+  int32 remaining_time_ms = 4;
+}
 message Grid {
   repeated Row rows = 1;
+  repeated PlayerInfo player_infos = 2;
 }
 message Game {
   repeated Player players = 1;
@@ -86,11 +92,6 @@ message Game {
   int32 game_length = 5;
   int32 current_tick = 6;
   Grid grid = 7;
-  repeated PlayerRemainingTime remaining_time_info = 8;
-}
-message PlayerRemainingTime {
-  Player player = 1;
-  int32 remaining_time_ms = 2;
 }
 
 message Coordinates {
@@ -103,6 +104,7 @@ message GridUpdate {
     Cell cell = 2;
   }
   repeated CellUpdate cell_updates = 1;
+  repeated PlayerInfo player_info_updates = 2;
 }
 message GameRequest {
   oneof request_type {
