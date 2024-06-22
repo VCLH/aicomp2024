@@ -41,19 +41,23 @@ export class GameDebugger {
           continue;
         }
         const defaultBorder = ' border: 2px solid #999';
-        if (cell.players.length == 1) {
+        const playersInCell = game.grid!.playerInfos
+          .filter(playerInfo => playerInfo.position!.x == i && playerInfo.position!.y == j)
+          .map(playerInfo => playerInfo.player);
+        if (playersInCell.length == 1) {
           gridStr.push('%c ');
-          gridStyles.push(this.getPlayerColor(cell.players[0]) + defaultBorder); // occupies entire cell
-        } else if (cell.players.length == 2) {
+          gridStyles.push(this.getPlayerColor(playersInCell[0]) + defaultBorder); // occupies entire cell
+        } else if (playersInCell.length == 2) {
           for (let i = 0; i < 2; ++i) {
-            gridStr.push('%c' + cell.players[i]);
-            gridStyles.push(this.getPlayerColor(cell.players[i]) + defaultBorder);
+            gridStr.push('%c' +playersInCell[i]);
+            gridStyles.push(this.getPlayerColor(playersInCell[i]) + defaultBorder);
           }
         } else if (cell.cellType?.bedrockCell != null) {
           gridStr.push('%c  ');
           gridStyles.push('background: #444; ' + defaultBorder);
         } else if (cell.cellType?.emptyCell != null) {
-          let background = cell.isVisited ? '#EEE' : '#FFF';
+          // TODO(microtony): Assign color.
+          let background = cell.firstVisitPlayer == proto.Player.INVALID ? '#FFF' : '#EEE';
           let border = defaultBorder;
           if (cell.cellType.emptyCell.door != null) {
             let direction = cell.cellType.emptyCell.door.direction;

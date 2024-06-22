@@ -27,9 +27,7 @@ export class GameGenerator {
   // helper functions to create default cells
   createCell(cellType: proto.CellType): proto.Cell {
     return proto.Cell.create({
-      players: [],
-      cellType: cellType,
-      isVisited: false,
+      cellType: cellType
     });
   }
   createBedrockCell(): proto.Cell {
@@ -157,21 +155,26 @@ export class GameGenerator {
       });
     }
 
-    // Add the players to random locations
-    const playerUnitRow = r(config.lengthUnits);
-    const playerUnitCol = r(config.lengthUnits);
-    for (let i = 0; i < 2; ++i) {
-      const playerRow = playerUnitRow * unitSize + r(unitSize - 2) + 1;
-      const playerCol = playerUnitCol * unitSize + r(unitSize - 2) + 1;
-      grid[playerRow][playerCol].players.push(config.players[i]);
-    }
-
     // copy the grid over to game
     game.grid = proto.Grid.create();
     for (let i = 0; i < grid.length; ++i) {
       const row = proto.Row.create({ cells: grid[i] });
       game.grid.rows.push(row);
     }
+
+    // Add the players to random locations
+    const playerUnitRow = r(config.lengthUnits);
+    const playerUnitCol = r(config.lengthUnits);
+    for (let i = 0; i < 2; ++i) {
+      const playerRow = playerUnitRow * unitSize + r(unitSize - 2) + 1;
+      const playerCol = playerUnitCol * unitSize + r(unitSize - 2) + 1;
+      const playerInfo = proto.PlayerInfo.create({ 
+        player: config.players[i],
+        position: proto.Coordinates.create({ x: playerRow, y: playerCol })
+      });
+      game.grid.playerInfos.push(playerInfo);
+    }
+    
     console.log(game);
     return game;
   }
