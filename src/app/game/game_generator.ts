@@ -7,10 +7,10 @@ function r(x: number): number {
 // https://stackoverflow.com/a/12646864/12901331
 function shuffleArray(array: any[]) {
   for (var i = array.length - 1; i > 0; i--) {
-      var j = Math.floor(Math.random() * (i + 1));
-      var temp = array[i];
-      array[i] = array[j];
-      array[j] = temp;
+    var j = Math.floor(Math.random() * (i + 1));
+    var temp = array[i];
+    array[i] = array[j];
+    array[j] = temp;
   }
 }
 
@@ -67,6 +67,7 @@ export class GameGenerator {
     return grid;
   }
 
+  // Generates the map. Visibility is not set here.
   generate(config: proto.GameMap, haveChest: boolean, numWoodType: number, pressurePlateDensity: number, doorDensity: number, chestDistribution: () => number): proto.GameMap {
     const grid: proto.Cell[][] = [];
     const game = proto.GameMap.create(config);
@@ -106,6 +107,54 @@ export class GameGenerator {
         const col = perm[i];
         grid[row * unitSize + 1][col * unitSize + 1] = this.createChestCell(chestDistribution());
       }
+    }
+
+    // generate doors
+    let possibleDoors: { x1: number, y1: number, x2: number, y2: number }[] = [];
+    for (let i = 0; i < config.lengthUnits; ++i) {
+      for (let j = 0; j < config.lengthUnits; ++j) {
+        if (i < config.lengthUnits - 1) { // down
+          possibleDoors.push({
+            x1: i * unitSize + 1 + unitSize - 1,
+            y1: j * unitSize + 1 + unitSize / 2,
+            x2: (i + 1) * unitSize + 1,
+            y2: j * unitSize + 1 + unitSize / 2,
+          });
+        }
+        if (j < config.lengthUnits - 1) { // right
+          possibleDoors.push({
+            x1: i * unitSize + 1 + unitSize / 2,
+            y1: j * unitSize + 1 + unitSize - 1,
+            x2: i * unitSize + 1 + unitSize / 2,
+            y2: (j + 1) * unitSize + 1,
+          });
+        }
+      }
+    }
+    shuffleArray(possibleDoors);
+    const nDoors = Math.floor(possibleDoors.length * doorDensity);
+    for (let i = 0; i < nDoors; ++i) {
+      const door = possibleDoors[i];
+      const doorDirection = door.x1 == door.x2 ? proto.Direction.DOWN : proto.Direction.RIGHT;
+      const woodType = proto.woodTypeFromJSON(r(numWoodType));
+      grid[door.x1][door.y1].cellType = proto.CellType.create({
+        emptyCell: proto.CellType_EmptyCell.create({
+          door: proto.Door.create({
+            direction: doorDirection,
+            woodType: woodType,
+            remainingOpenTicks: 0,
+          }),
+        }),
+      });
+      grid[door.x2][door.y2].cellType = proto.CellType.create({
+        emptyCell: proto.CellType_EmptyCell.create({
+          door: proto.Door.create({
+            direction: doorDirection ^ 1,
+            woodType: woodType,
+            remainingOpenTicks: 0,
+          }),
+        }),
+      });
     }
 
     // Add the players to random locations

@@ -30,11 +30,11 @@ enum WoodType {
   WARPED = 10;
 }
 enum Direction {
-  NONE = 0;
-  RIGHT = 1;
-  UP = 2;
-  LEFT = 3;
-  DOWN = 4;
+  NONE = -1;
+  RIGHT = 0;
+  UP = 1;
+  LEFT = 2;
+  DOWN = 3;
 }
 message Door {
   int32 remaining_open_ticks = 1; // -1: infinite (someone is on a related pressure plate), 0: closed

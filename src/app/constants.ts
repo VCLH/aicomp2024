@@ -11,13 +11,25 @@ export const BG_COLORS = [
 ];
 
 export const FG_COLORS = [
-    ['#999', '#0EE'],
-    ['#FFF', '#0EE'],
-    ['#FFF', '#0EE'],
-    ['#FFF', '#0EE'],
-    ['#000', '#33F'],
-    ['#000', '#33F'],
-    ['#FFF', '#0EE'],
-    ['#FFF', '#0EE'],
-    ['#FFF', '#33F'],
+    '#999',
+    '#FFF',
+    '#FFF',
+    '#FFF',
+    '#000',
+    '#000',
+    '#FFF',
+    '#FFF',
+    '#FFF',
+];
+
+export const WOOD_COLORS = [ // need change later
+    '#000',
+    '#FFF',
+    '#FFF',
+    '#FFF',
+    '#000',
+    '#000',
+    '#FFF',
+    '#FFF',
+    '#FFF',
 ];
