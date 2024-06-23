@@ -68,7 +68,7 @@ export class GameGenerator {
     const grid: proto.Cell[][] = [];
     const game = proto.GameMap.create(config);
     const nPlayers = config.players.length;
-    console.assert(nPlayers == 2, "Only 2 players are supported");
+    // console.assert(nPlayers == 2, "Only 2 players are supported");
 
     // create the grid with a border of bedrock cells 
     const unitSize = 7;
@@ -98,12 +98,15 @@ export class GameGenerator {
       for (let i = 0; i < config.lengthUnits; ++i) {
         const row = i;
         const col = perm[i];
-        grid[row * unitSize + 4][col * unitSize + 4] = this.createChestCell(Math.ceil(chestDistribution()));
+        grid[row * unitSize + Math.ceil(unitSize / 2)][col * unitSize + Math.ceil(unitSize / 2)] = this.createChestCell(Math.ceil(chestDistribution()));
       }
     }
 
     const woodTypePermutation = Array.from(Array(10).keys());
-    shuffleArray(woodTypePermutation);
+    // This will generate better door colors
+    do {
+      shuffleArray(woodTypePermutation);
+    } while (woodTypePermutation[0] + woodTypePermutation[1] + woodTypePermutation[2] <= 12);
 
     // generate doors
     let possibleDoors: { x1: number, y1: number, x2: number, y2: number }[] = [];
@@ -159,8 +162,8 @@ export class GameGenerator {
     const possiblePlates: { x: number, y: number }[] = [];
     for (let i = 0; i < config.lengthUnits; ++i) {
       for (let j = 0; j < config.lengthUnits; ++j) {
-        const x = i * unitSize + 4;
-        const y = j * unitSize + 4;
+        const x = i * unitSize + Math.ceil(unitSize / 2);
+        const y = j * unitSize + Math.ceil(unitSize / 2);
         if (grid[x][y].cellType?.chestCell) {
           continue;
         }
@@ -191,11 +194,21 @@ export class GameGenerator {
     }
 
     // Add the players to random locations
+    const playerPositionShuffler = [];
+    for (let dx = 1; dx < unitSize - 1; ++dx) {
+      for (let dy = 1; dy < unitSize - 1; ++dy) {
+        if (dx == dy && dx == Math.ceil(unitSize / 2)) {
+          continue;
+        }
+        playerPositionShuffler.push({ dx, dy });
+      }
+    }
+    shuffleArray(playerPositionShuffler);
     const playerUnitRow = r(config.lengthUnits);
     const playerUnitCol = r(config.lengthUnits);
-    for (let i = 0; i < 2; ++i) {
-      const playerRow = playerUnitRow * unitSize + r(unitSize - 2) + 1;
-      const playerCol = playerUnitCol * unitSize + r(unitSize - 2) + 1;
+    for (let i = 0; i < nPlayers; ++i) {
+      const playerRow = playerUnitRow * unitSize + playerPositionShuffler[i].dx + 1;
+      const playerCol = playerUnitCol * unitSize + playerPositionShuffler[i].dy + 1;
       const playerInfo = proto.PlayerInfo.create({ 
         player: config.players[i],
         position: proto.Coordinates.create({ x: playerRow, y: playerCol })

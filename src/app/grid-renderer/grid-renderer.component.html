@@ -14,4 +14,7 @@
       <div class="overlay chest" *ngIf="cell.cellType.chestCell">{{ cell.cellType.chestCell.score }}</div>
     </div>
   </div>
+  <div class="players">
+    <div *ngFor="let playerInfo of grid.playerInfos" class="player" [style.backgroundPositionX]="-(playerInfo.player - 1) * 16 + 'px'" [style.top]="playerInfo.position.x * 16 + 'px'" [style.left]="playerInfo.position.y * 16 + 'px'"></div>
+  </div>
 </div>

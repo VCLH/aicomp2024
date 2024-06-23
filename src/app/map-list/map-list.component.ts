@@ -108,16 +108,12 @@ export class MapListComponent {
 
   public usePreset(numPlayers: number) {
     /*
-    2 players: 14x14, 65%, 10 towers
-  3 players: 16x16, 70%, 15 towers [tie breaker only]
-  4 players: 18x18, 75%, 20 towers
-  6 players: 20x20, 80%, 25 towers
-    
-    this.generatorConfig.numPlayers = numPlayers;
-    this.generatorConfig.width = this.generatorConfig.height =
-      [0, 0, 14, 16, 18, 19, 20, 21, 22][numPlayers].toString();
-    this.generatorConfig.density = [0, 0, 65, 65, 70, 70, 75, 75, 80][numPlayers].toString();
-    this.generatorConfig.numTower = [0, 0, 10, 15, 20, 22, 25, 28, 30][numPlayers].toString();
+    2-3 players: 3 units
+    4+ players: 4 units, density = 40, 20
     */
+    this.generatorConfig.numPlayers = numPlayers;
+    this.generatorConfig.units = numPlayers <= 3 ? '3' : '4';
+    this.generatorConfig.pressurePlateDensity = numPlayers <= 3 ? '40' : '20';
+    this.generatorConfig.doorDensity = numPlayers <= 3 ? '20' : '10';
   }
 }
