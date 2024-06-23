@@ -186,7 +186,7 @@ export class GameRunner {
     for (let i = 0; i < this.game.height; ++i) {
       for (let j = 0; j < this.game.width; ++j) {
         if (this.game!.grid!.rows[i].cells[j].cellType?.emptyCell?.door) {
-          if (this.game.grid!.rows[i].cells[j].cellType?.emptyCell?.door) {
+          if (this.game.grid!.rows[i].cells[j].cellType?.emptyCell?.door?.woodType === woodType) {
             doors.push([i, j]);
           }
         }
