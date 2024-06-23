@@ -62,7 +62,7 @@ export class GameDebugger {
           if (cell.cellType.emptyCell.door != null) {
             let direction = cell.cellType.emptyCell.door.direction;
             let woodType = cell.cellType.emptyCell.door.woodType;
-            let doorBorderThickness = cell.cellType.emptyCell.door?.remainingOpenTicks == 0 ? 4 : 0;
+            let doorBorderThickness = cell.cellType.emptyCell.door?.isOpen ? 0 : 4;
             if (direction == proto.Direction.UP) {
               border += `; border-top: ${doorBorderThickness}px solid ${this.getWoodColor(woodType)}`;
             } else if (direction == proto.Direction.DOWN) {

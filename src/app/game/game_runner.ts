@@ -40,7 +40,7 @@ export class GameRunner {
 
 
   // updates to be flushed
-  private gridUpdate: proto.GridUpdate;
+  private gridUpdateCoordinates: proto.Coordinates[];
 
   constructor(game: proto.Game, players: Map<proto.Player, Strategy>) {
     this.game = game;
@@ -76,16 +76,9 @@ export class GameRunner {
     }
 
     // get current player and act
-    const player = this.tickSequence.shift();
-    if (!player) {
-      // player list empty, game ends
-      return true;
-    }
+    const player = this.tickSequence.shift()!;
 
-    this.gridUpdate = proto.GridUpdate.create({
-      cellUpdates: [],
-      playerInfoUpdates: [],
-    })
+    this.gridUpdateCoordinates = [];
     const action = this.playerStrategies.get(player)?.performAction();
     if (action?.move) {
       this.handleMove(player, action.move);
@@ -94,13 +87,43 @@ export class GameRunner {
       this.handleMine(player, action.mine);
     }
 
-    if (this.gridUpdate.cellUpdates.length > 0 || this.gridUpdate.playerInfoUpdates.length > 0) {
-      for (const player of this.players) {
-        this.playerStrategies.get(player)?.handleGridUpdate(this.gridUpdate);
+    if (this.tickSequence.length == 0) {
+      // player list empty, tick ends.
+      // reset non-mined stone
+      for (let x = 0; x < this.game.height; ++x) {
+        for (let y = 0; y < this.game.width; ++y) {
+          if (this.game.grid!.rows[x].cells[y].cellType?.stoneCell && this.stoneDamage[x][y] > 0 &&
+            this.lastMined[x][y] != this.tickNumber) {
+            this.game.grid!.rows[x].cells[y].cellType!.stoneCell!.mineCount = 0;
+            this.stoneDamage[x][y] = 0;
+            this.gridUpdateCoordinates.push(proto.Coordinates.create({ x, y }));
+          }
+        }
       }
     }
-    
-    return false;
+
+    // Remove duplicate coordinates from gridUpdateCoordinates.
+    const uniqueGridUpdateCoordinates = Array.from(new Set(this.gridUpdateCoordinates));
+
+    // Sync playerView from grid
+    for (const c of uniqueGridUpdateCoordinates) {
+      this.playerView[c.x].cells[c.y] = this.game.grid!.rows[c.x].cells[c.y];
+    }
+
+    const gridUpdate = proto.GridUpdate.create({
+      cellUpdates: uniqueGridUpdateCoordinates.map(c => proto.GridUpdate_CellUpdate.create({
+        cell: this.game.grid!.rows[c.x].cells[c.y],
+        coordinates: c
+      })),
+      playerInfoUpdates: [this.playerInfos[player]]
+    });
+
+
+    for (const player of this.players) {
+      this.playerStrategies.get(player)?.handleGridUpdate(gridUpdate);
+    }
+
+    return this.tickSequence.length == 0;
   }
 
   debug(player: proto.Player) {
@@ -119,37 +142,23 @@ export class GameRunner {
   private makeVisible(x: number, y: number) {
     if (this.playerView[x].cells[y].cellType?.invisibleCell) {
       this.playerView[x].cells[y] = this.game!.grid!.rows[x].cells[y];
-      this.gridUpdate.cellUpdates.push(proto.GridUpdate_CellUpdate.create({
-        cell: this.game!.grid!.rows[x].cells[y],
-        coordinates: { x, y }
-      }))
+      this.gridUpdateCoordinates.push(proto.Coordinates.create({ x, y }));
     }
   }
 
-  private updatePlayerView() {
-    // TOOD: review door adjacent cells
-    for (const player of this.players) {
-      const position = this.playerInfos.get(player)!.position!
-      const [unit_x, unit_y] = [position.x / UNIT_LENGTH, position.y / UNIT_LENGTH];
-      for (let x = unit_x; x < unit_x + UNIT_LENGTH; ++x) {
-        for (let y = unit_y; y < unit_y + UNIT_LENGTH; ++y) {
-          // this cell now becomes visible
-          this.makeVisible(x, y);
-
-          // check if adjacent cell is a door, these cells should also be visible
-          for (const [offset_x, offset_y] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-            const [new_x, new_y] = [x + offset_x, y + offset_y];
-            if (!this.isCell(new_x, new_y)) {
-              return;
-            }
-            if (this.game!.grid!.rows[x].cells[y].cellType?.emptyCell?.door) {
-              this.makeVisible(x, y);
-            }
-          }
+  private updatePlayerView(player: proto.Player) {
+    const position = this.playerInfos.get(player)!.position!
+    const [unit_x, unit_y] = [Math.floor((position.x - 1) / UNIT_LENGTH), Math.floor((position.y - 1) / UNIT_LENGTH)];
+    // At Unit 1, we do index 7 .. 16
+    for (let x = unit_x * UNIT_LENGTH; x <= (unit_x + 1) * UNIT_LENGTH + 1; ++x) {
+      for (let y = unit_y * UNIT_LENGTH; y <= (unit_y + 1) * UNIT_LENGTH + 1; ++y) {
+        if (!this.isCell(x, y)) {
+          continue;
         }
+        // this cell now becomes visible
+        this.makeVisible(x, y);
       }
     }
-
   }
 
   private sendInitializeGame(): void {
@@ -159,8 +168,12 @@ export class GameRunner {
           .map(_ => proto.Cell.create({ cellType: proto.CellType.create({ invisibleCell: {} }), }))
       }))
     this.stoneDamage = Array(this.game.height).map(_ => Array(this.game.width).fill(0));
-    this.lastMined = Array(this.game.height).map(_ => Array(this.game.width).fill(-5));
-    this.updatePlayerView();
+    this.lastMined = Array(this.game.height).map(_ => Array(this.game.width).fill(0));
+    for (const player of this.players) {
+      this.updatePlayerView(player);
+    }
+    // Clear the updates generated by updatePlayerView above.
+    this.gridUpdateCoordinates = [];
 
     const grid = proto.Grid.create({
       rows: this.playerView,
@@ -181,13 +194,13 @@ export class GameRunner {
     }
   }
 
-  private getAllDoors(woodType: proto.WoodType): number[][] {
-    const doors: number[][] = [];
+  private getAllDoors(woodType: proto.WoodType): proto.Coordinates[] {
+    const doors: proto.Coordinates[] = [];
     for (let i = 0; i < this.game.height; ++i) {
       for (let j = 0; j < this.game.width; ++j) {
         if (this.game!.grid!.rows[i].cells[j].cellType?.emptyCell?.door) {
           if (this.game.grid!.rows[i].cells[j].cellType?.emptyCell?.door?.woodType === woodType) {
-            doors.push([i, j]);
+            doors.push(proto.Coordinates.create({ x: i, y: j }));
           }
         }
       }
@@ -216,7 +229,7 @@ export class GameRunner {
     }
 
     const new_cell = this.game!.grid!.rows[new_x].cells[new_y];
-    if (new_cell.cellType?.bedrockCell || new_cell.cellType?.stoneCell) {
+    if (new_cell.cellType?.bedrockCell || new_cell.cellType?.stoneCell || new_cell.cellType?.chestCell) {
       // cannot walk onto bedrock / stone / chest
       return;
     }
@@ -228,65 +241,44 @@ export class GameRunner {
       this.activePressurePlates[woodType]--;
 
       if (this.activePressurePlates[woodType] == 0) {
-        for (const [door_x, door_y] of this.getAllDoors(woodType)) {
-          const doorCell = this.game.grid!.rows[door_x].cells[door_y];
+        for (const c of this.getAllDoors(woodType)) {
+          const doorCell = this.game.grid!.rows[c.x].cells[c.y];
           const door = doorCell.cellType!.emptyCell!.door!;
           door.isOpen = false;
-          this.gridUpdate.cellUpdates.push(proto.GridUpdate_CellUpdate.create({
-            cell: {
-              ...doorCell,
-              cellType: proto.CellType.create({
-                emptyCell: {
-                  door: { ...door, isOpen: false }
-                }
-              }),
-            },
-            coordinates: { x: new_x, y: new_y }
-          }))
+          if (!this.playerView[c.x].cells[c.y].cellType?.invisibleCell) {
+            this.gridUpdateCoordinates.push(proto.Coordinates.create({
+              x: c.x, y: c.y
+            }))
+          }
         }
       }
     }
 
     // update coordinates
-    const new_info = proto.PlayerInfo.create({
-      ...info,
-      position: proto.Coordinates.create({ x: new_x, y: new_y })
-    });
-    this.playerInfos.set(player, new_info);
+    info.position = proto.Coordinates.create({ x: new_x, y: new_y });
 
     // update visited
-    new_cell.firstVisitPlayer = player;
+    if (new_cell.firstVisitPlayer == proto.Player.INVALID) {
+      new_cell.firstVisitPlayer = player;
+      this.updatePlayerView(player);
+    }
 
     // entering pressure plate
     if (new_cell.cellType?.pressurePlateCell) {
       const woodType = new_cell.cellType.pressurePlateCell.woodType;
       this.activePressurePlates.set(woodType, 1 + (this.activePressurePlates.get(woodType) ?? 0));
 
-      for (const [door_x, door_y] of this.getAllDoors(woodType)) {
-        const doorCell = this.game.grid!.rows[door_x].cells[door_y];
+      for (const c of this.getAllDoors(woodType)) {
+        const doorCell = this.game.grid!.rows[c.x].cells[c.y];
         const door = doorCell.cellType!.emptyCell!.door!;
         door.isOpen = false;
-        this.gridUpdate.cellUpdates.push(proto.GridUpdate_CellUpdate.create({
-          cell: {
-            ...doorCell,
-            cellType: proto.CellType.create({
-              emptyCell: {
-                door: { ...door, isOpen: true }
-              }
-            }),
-          },
-          coordinates: { x: new_x, y: new_y }
-        }))
+        if (!this.playerView[c.x].cells[c.y].cellType?.invisibleCell) {
+          this.gridUpdateCoordinates.push(proto.Coordinates.create({
+            x: c.x, y: c.y
+          }))
+        }
       }
     }
-
-
-    // send updates
-    this.gridUpdate.playerInfoUpdates.push(new_info);
-    this.gridUpdate.cellUpdates.push(proto.GridUpdate_CellUpdate.create({
-      coordinates: { x: new_x, y: new_y },
-      cell: { cellType: new_cell.cellType, firstVisitPlayer: new_cell.firstVisitPlayer }
-    }));
   }
 
   private handleMine(player: proto.Player, mine: proto.Mine) {
@@ -300,19 +292,21 @@ export class GameRunner {
     }
     const new_cell = this.game!.grid!.rows[new_x].cells[new_y];
 
+    if (new_cell.cellType?.chestCell && !new_cell.cellType.chestCell.isOpened) {
+      new_cell.cellType.chestCell.isOpened = true;
+      this.gridUpdateCoordinates.push(proto.Coordinates.create({
+        x: new_x, y: new_y
+      }))
+    }
     if (new_cell.cellType?.stoneCell) {
-      // reset damage if not mined in the last 2 ticks
-      if (this.tickNumber > this.lastMined[new_x][new_y] + 2) {
-        this.stoneDamage[new_x][new_y] = 0
-      }
-
       this.stoneDamage[new_x][new_y]++;
+      this.lastMined[new_x][new_y] = this.game.currentTick;
+
       if (this.stoneDamage[new_x][new_y] == STONE_HP) {
         // stone dead
         new_cell.cellType = proto.CellType.create({ emptyCell: {} });
-        this.gridUpdate.cellUpdates.push(proto.GridUpdate_CellUpdate.create({
-          coordinates: { x: new_x, y: new_y },
-          cell: { ...new_cell }
+        this.gridUpdateCoordinates.push(proto.Coordinates.create({
+          x: new_x, y: new_y
         }))
       }
     }
