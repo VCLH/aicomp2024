@@ -37,7 +37,7 @@ enum Direction {
   DOWN = 4;
 }
 message Door {
-  int32 remaining_open_ticks = 1; // -1: infinite (someone is on a related pressure plate), 0: closed
+  bool is_open = 1;
   WoodType wood_type = 2;
   Direction direction = 3; // the door is facing this direction
 }
@@ -106,14 +106,6 @@ message GridUpdate {
   repeated CellUpdate cell_updates = 1;
   repeated PlayerInfo player_info_updates = 2;
 }
-message GameRequest {
-  oneof request_type {
-    bool should_act = 1;
-    Game initialize_game = 2;
-    bool tick = 3;
-    GridUpdate grid_update = 4;
-  }
-}
 message Move {
   Direction direction = 1; // 0 if no move
 }
@@ -125,13 +117,10 @@ message Action {
     Move move = 1;
     Mine mine = 2;
   }
+  Signal signal = 3;
 }
 message Signal {
   WoodType wood_type = 1;
-}
-message GameResponse {
-  Action action = 1;
-  Signal signal = 2;
 }
 message GameMap {
   repeated Player players = 1;

@@ -140,7 +140,7 @@ export class GameGenerator {
           door: proto.Door.create({
             direction: doorDirection,
             woodType: woodType,
-            remainingOpenTicks: 0,
+            isOpen: false,
           }),
         }),
       });
@@ -149,7 +149,7 @@ export class GameGenerator {
           door: proto.Door.create({
             direction: doorDirection ^ 1,
             woodType: woodType,
-            remainingOpenTicks: 0,
+            isOpen: false,
           }),
         }),
       });
