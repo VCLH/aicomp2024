@@ -3,6 +3,7 @@
   display: inline-block;
   flex-direction: column;
   margin-bottom: 40px;
+  position: relative;
 
   .players {
     position: absolute;
@@ -21,7 +22,7 @@
     }
   }
 
-  .row {
+  .game-row {
     display: flex;
     height: 16px;
 

@@ -1,5 +1,5 @@
-<div *ngIf="grid != null" class="grid">
-  <div *ngFor="let row of grid.rows" class="row">
+<div *ngIf="grid != null" class="grid" [style.width]="grid.rows.length * 16 + 'px'" [style.height]="grid.rows[0].length * 16 + 'px'">
+  <div *ngFor="let row of grid.rows" class="game-row">
     <div *ngFor="let cell of row.cells"
       class="cell"
       [class.bedrock]="cell.cellType.bedrockCell"

@@ -43,7 +43,6 @@ message Door {
 }
 
 message CellType {
-  message BedrockCell {}
   message StoneCell {
     int32 mine_count = 1;
     int32 last_mine_tick = 2;
@@ -58,14 +57,13 @@ message CellType {
     int32 score = 1;
     bool is_opened = 2;
   }
-  message InvisibleCell {}
   oneof cell_type {
-    BedrockCell bedrock_cell = 1;
+    bool bedrock_cell = 1;
     StoneCell stone_cell = 2;
     EmptyCell empty_cell = 3;
     PressurePlateCell pressure_plate_cell = 4;
     ChestCell chest_cell = 5;
-    InvisibleCell invisible_cell = 6;
+    bool invisible_cell = 6;
   }
 }
 message Cell {
@@ -78,7 +76,7 @@ message Row {
 message PlayerInfo {
   Player player = 1;
   Coordinates position = 2;
-  Signal signal = 3;
+  WoodType signal = 3;
   int32 remaining_time_ms = 4;
 }
 message Grid {
@@ -107,21 +105,12 @@ message GridUpdate {
   repeated CellUpdate cell_updates = 1;
   repeated PlayerInfo player_info_updates = 2;
 }
-message Move {
-  Direction direction = 1; // 0 if no move
-}
-message Mine {
-  Direction direction = 1;
-}
 message Action {
   oneof action {
-    Move move = 1;
-    Mine mine = 2;
+    Direction move = 1;
+    Direction mine = 2;
   }
-  Signal signal = 3;
-}
-message Signal {
-  WoodType wood_type = 1;
+  WoodType signal = 3;
 }
 message GameMap {
   repeated Player players = 1;

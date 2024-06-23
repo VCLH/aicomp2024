@@ -15,7 +15,7 @@ export class PlayComponent {
   bots: BotRow[] = [];
   selectedMap: number = 0;
   selectedBots: number[] = [0, 0, 0, 0, 0, 0, 0, 0];
-  selectedLength: number = 1000;
+  selectedLength: number = 200;
   gameConfig: proto.GameConfig | null = null;
 
   readonly getPlayerName = proto.playerFromJSON;

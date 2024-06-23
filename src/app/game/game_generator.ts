@@ -31,7 +31,7 @@ export class GameGenerator {
     });
   }
   createBedrockCell(): proto.Cell {
-    return this.createCell(proto.CellType.create({ bedrockCell: proto.CellType_BedrockCell.create({}) }));
+    return this.createCell(proto.CellType.create({ bedrockCell: true }));
   }
   createStoneCell(): proto.Cell {
     return this.createCell(proto.CellType.create({ stoneCell: proto.CellType_StoneCell.create({ lastMineTick: 0, mineCount: 0 }) }));

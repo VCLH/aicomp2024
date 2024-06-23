@@ -75,7 +75,8 @@ export class GameRunner {
 
     if (this.tickSequence.length === 0) {
       this.tickNumber++;
-      this.tickSequence = this.players;
+      this.game.currentTick = this.tickNumber;
+      this.tickSequence = Array.from(this.players);
     }
 
     // get current player and act
@@ -113,17 +114,18 @@ export class GameRunner {
       this.playerView[c.x].cells[c.y] = this.game.grid!.rows[c.x].cells[c.y];
     }
 
-    const gridUpdate = proto.GridUpdate.create({
-      cellUpdates: uniqueGridUpdateCoordinates.map(c => proto.GridUpdate_CellUpdate.create({
-        cell: this.game.grid!.rows[c.x].cells[c.y],
-        coordinates: c
-      })),
-      playerInfoUpdates: [this.playerInfos.get(player)!]
-    });
-
+    const cellUpdates = uniqueGridUpdateCoordinates.map(c => proto.GridUpdate_CellUpdate.create({
+      cell: this.game.grid!.rows[c.x].cells[c.y],
+      coordinates: c
+    }));
+    const playerInfoUpdates = [this.playerInfos.get(player)!];
 
     for (const player of this.players) {
-      this.playerStrategies.get(player)?.handleGridUpdate(gridUpdate);
+      // We must create a new one for each player.
+      this.playerStrategies.get(player)?.handleGridUpdate(proto.GridUpdate.create({
+        cellUpdates,
+        playerInfoUpdates
+      }));
     }
 
     return this.tickSequence.length == 0;
@@ -165,13 +167,14 @@ export class GameRunner {
   }
 
   private sendInitializeGame(): void {
-    this.playerView = Array(this.game.height)
+    const template = Array.from(Array(this.game.height).keys());
+    this.playerView = template
       .map(_ => proto.Row.create({
-        cells: Array(this.game.width)
-          .map(_ => proto.Cell.create({ cellType: proto.CellType.create({ invisibleCell: {} }), }))
+        cells: template
+          .map(_ => proto.Cell.create({ cellType: proto.CellType.create({ invisibleCell: true }) }))
       }))
-    this.stoneDamage = Array(this.game.height).map(_ => Array(this.game.width).fill(0));
-    this.lastMined = Array(this.game.height).map(_ => Array(this.game.width).fill(0));
+    this.stoneDamage = template.map(_ => Array(this.game.width).fill(0));
+    this.lastMined = template.map(_ => Array(this.game.width).fill(0));
     for (const player of this.players) {
       this.updatePlayerView(player);
     }
@@ -211,7 +214,7 @@ export class GameRunner {
     return doors;
   }
 
-  private handleMove(player: proto.Player, move: proto.Mine): void {
+  private handleMove(player: proto.Player, direction: proto.Direction): void {
     const info = this.playerInfos.get(player)!;
     const position = info.position;
     const [x, y] = [position!.x, position!.y];
@@ -219,13 +222,13 @@ export class GameRunner {
 
     if (cell.cellType?.emptyCell?.door) {
       const door = cell.cellType.emptyCell.door;
-      if (door.isOpen == false && door.direction == move.direction) {
+      if (door.isOpen == false && door.direction == direction) {
         // cannnot walk to new cell
         return;
       }
     }
 
-    const [offset_x, offset_y] = offset(move.direction);
+    const [offset_x, offset_y] = offset(direction);
     const [new_x, new_y] = [x + offset_x, y + offset_y];
     if (!this.isCell(new_x, new_y)) {
       return;
@@ -264,6 +267,9 @@ export class GameRunner {
     // update visited
     if (new_cell.firstVisitPlayer == proto.Player.INVALID) {
       new_cell.firstVisitPlayer = player;
+      this.gridUpdateCoordinates.push(proto.Coordinates.create({
+        x: new_x, y: new_y
+      }));
       this.updatePlayerView(player);
     }
 
@@ -285,11 +291,11 @@ export class GameRunner {
     }
   }
 
-  private handleMine(player: proto.Player, mine: proto.Mine) {
+  private handleMine(player: proto.Player, direction: proto.Direction) {
     const info = this.playerInfos.get(player)!;
     const position = info.position;
     const [x, y] = [position!.x, position!.y];
-    const [offset_x, offset_y] = offset(mine.direction);
+    const [offset_x, offset_y] = offset(direction);
     const [new_x, new_y] = [x + offset_x, y + offset_y];
     if (!this.isCell(new_x, new_y)) {
       return;
@@ -304,7 +310,7 @@ export class GameRunner {
     }
     if (new_cell.cellType?.stoneCell) {
       this.stoneDamage[new_x][new_y]++;
-      this.lastMined[new_x][new_y] = this.game.currentTick;
+      this.lastMined[new_x][new_y] = this.tickNumber;
 
       if (this.stoneDamage[new_x][new_y] == STONE_HP) {
         // stone dead

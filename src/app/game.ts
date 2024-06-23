@@ -236,15 +236,12 @@ export interface Door {
 }
 
 export interface CellType {
-  bedrockCell?: CellType_BedrockCell | undefined;
+  bedrockCell?: boolean | undefined;
   stoneCell?: CellType_StoneCell | undefined;
   emptyCell?: CellType_EmptyCell | undefined;
   pressurePlateCell?: CellType_PressurePlateCell | undefined;
   chestCell?: CellType_ChestCell | undefined;
-  invisibleCell?: CellType_InvisibleCell | undefined;
-}
-
-export interface CellType_BedrockCell {
+  invisibleCell?: boolean | undefined;
 }
 
 export interface CellType_StoneCell {
@@ -265,9 +262,6 @@ export interface CellType_ChestCell {
   isOpened: boolean;
 }
 
-export interface CellType_InvisibleCell {
-}
-
 export interface Cell {
   cellType:
     | CellType
@@ -283,7 +277,7 @@ export interface Row {
 export interface PlayerInfo {
   player: Player;
   position: Coordinates | undefined;
-  signal: Signal | undefined;
+  signal: WoodType;
   remainingTimeMs: number;
 }
 
@@ -317,23 +311,10 @@ export interface GridUpdate_CellUpdate {
   cell: Cell | undefined;
 }
 
-export interface Move {
-  /** 0 if no move */
-  direction: Direction;
-}
-
-export interface Mine {
-  direction: Direction;
-}
-
 export interface Action {
-  move?: Move | undefined;
-  mine?: Mine | undefined;
-  signal: Signal | undefined;
-}
-
-export interface Signal {
-  woodType: WoodType;
+  move?: Direction | undefined;
+  mine?: Direction | undefined;
+  signal: WoodType;
 }
 
 export interface GameMap {
@@ -459,7 +440,7 @@ function createBaseCellType(): CellType {
 export const CellType = {
   encode(message: CellType, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.bedrockCell !== undefined) {
-      CellType_BedrockCell.encode(message.bedrockCell, writer.uint32(10).fork()).ldelim();
+      writer.uint32(8).bool(message.bedrockCell);
     }
     if (message.stoneCell !== undefined) {
       CellType_StoneCell.encode(message.stoneCell, writer.uint32(18).fork()).ldelim();
@@ -474,7 +455,7 @@ export const CellType = {
       CellType_ChestCell.encode(message.chestCell, writer.uint32(42).fork()).ldelim();
     }
     if (message.invisibleCell !== undefined) {
-      CellType_InvisibleCell.encode(message.invisibleCell, writer.uint32(50).fork()).ldelim();
+      writer.uint32(48).bool(message.invisibleCell);
     }
     return writer;
   },
@@ -487,11 +468,11 @@ export const CellType = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
+          if (tag !== 8) {
             break;
           }
 
-          message.bedrockCell = CellType_BedrockCell.decode(reader, reader.uint32());
+          message.bedrockCell = reader.bool();
           continue;
         case 2:
           if (tag !== 18) {
@@ -522,11 +503,11 @@ export const CellType = {
           message.chestCell = CellType_ChestCell.decode(reader, reader.uint32());
           continue;
         case 6:
-          if (tag !== 50) {
+          if (tag !== 48) {
             break;
           }
 
-          message.invisibleCell = CellType_InvisibleCell.decode(reader, reader.uint32());
+          message.invisibleCell = reader.bool();
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -539,21 +520,21 @@ export const CellType = {
 
   fromJSON(object: any): CellType {
     return {
-      bedrockCell: isSet(object.bedrockCell) ? CellType_BedrockCell.fromJSON(object.bedrockCell) : undefined,
+      bedrockCell: isSet(object.bedrockCell) ? globalThis.Boolean(object.bedrockCell) : undefined,
       stoneCell: isSet(object.stoneCell) ? CellType_StoneCell.fromJSON(object.stoneCell) : undefined,
       emptyCell: isSet(object.emptyCell) ? CellType_EmptyCell.fromJSON(object.emptyCell) : undefined,
       pressurePlateCell: isSet(object.pressurePlateCell)
         ? CellType_PressurePlateCell.fromJSON(object.pressurePlateCell)
         : undefined,
       chestCell: isSet(object.chestCell) ? CellType_ChestCell.fromJSON(object.chestCell) : undefined,
-      invisibleCell: isSet(object.invisibleCell) ? CellType_InvisibleCell.fromJSON(object.invisibleCell) : undefined,
+      invisibleCell: isSet(object.invisibleCell) ? globalThis.Boolean(object.invisibleCell) : undefined,
     };
   },
 
   toJSON(message: CellType): unknown {
     const obj: any = {};
     if (message.bedrockCell !== undefined) {
-      obj.bedrockCell = CellType_BedrockCell.toJSON(message.bedrockCell);
+      obj.bedrockCell = message.bedrockCell;
     }
     if (message.stoneCell !== undefined) {
       obj.stoneCell = CellType_StoneCell.toJSON(message.stoneCell);
@@ -568,7 +549,7 @@ export const CellType = {
       obj.chestCell = CellType_ChestCell.toJSON(message.chestCell);
     }
     if (message.invisibleCell !== undefined) {
-      obj.invisibleCell = CellType_InvisibleCell.toJSON(message.invisibleCell);
+      obj.invisibleCell = message.invisibleCell;
     }
     return obj;
   },
@@ -578,9 +559,7 @@ export const CellType = {
   },
   fromPartial<I extends Exact<DeepPartial<CellType>, I>>(object: I): CellType {
     const message = createBaseCellType();
-    message.bedrockCell = (object.bedrockCell !== undefined && object.bedrockCell !== null)
-      ? CellType_BedrockCell.fromPartial(object.bedrockCell)
-      : undefined;
+    message.bedrockCell = object.bedrockCell ?? undefined;
     message.stoneCell = (object.stoneCell !== undefined && object.stoneCell !== null)
       ? CellType_StoneCell.fromPartial(object.stoneCell)
       : undefined;
@@ -593,52 +572,7 @@ export const CellType = {
     message.chestCell = (object.chestCell !== undefined && object.chestCell !== null)
       ? CellType_ChestCell.fromPartial(object.chestCell)
       : undefined;
-    message.invisibleCell = (object.invisibleCell !== undefined && object.invisibleCell !== null)
-      ? CellType_InvisibleCell.fromPartial(object.invisibleCell)
-      : undefined;
-    return message;
-  },
-};
-
-function createBaseCellType_BedrockCell(): CellType_BedrockCell {
-  return {};
-}
-
-export const CellType_BedrockCell = {
-  encode(_: CellType_BedrockCell, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): CellType_BedrockCell {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseCellType_BedrockCell();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(_: any): CellType_BedrockCell {
-    return {};
-  },
-
-  toJSON(_: CellType_BedrockCell): unknown {
-    const obj: any = {};
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<CellType_BedrockCell>, I>>(base?: I): CellType_BedrockCell {
-    return CellType_BedrockCell.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<CellType_BedrockCell>, I>>(_: I): CellType_BedrockCell {
-    const message = createBaseCellType_BedrockCell();
+    message.invisibleCell = object.invisibleCell ?? undefined;
     return message;
   },
 };
@@ -905,49 +839,6 @@ export const CellType_ChestCell = {
   },
 };
 
-function createBaseCellType_InvisibleCell(): CellType_InvisibleCell {
-  return {};
-}
-
-export const CellType_InvisibleCell = {
-  encode(_: CellType_InvisibleCell, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): CellType_InvisibleCell {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseCellType_InvisibleCell();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(_: any): CellType_InvisibleCell {
-    return {};
-  },
-
-  toJSON(_: CellType_InvisibleCell): unknown {
-    const obj: any = {};
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<CellType_InvisibleCell>, I>>(base?: I): CellType_InvisibleCell {
-    return CellType_InvisibleCell.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<CellType_InvisibleCell>, I>>(_: I): CellType_InvisibleCell {
-    const message = createBaseCellType_InvisibleCell();
-    return message;
-  },
-};
-
 function createBaseCell(): Cell {
   return { cellType: undefined, firstVisitPlayer: 0 };
 }
@@ -1082,7 +973,7 @@ export const Row = {
 };
 
 function createBasePlayerInfo(): PlayerInfo {
-  return { player: 0, position: undefined, signal: undefined, remainingTimeMs: 0 };
+  return { player: 0, position: undefined, signal: 0, remainingTimeMs: 0 };
 }
 
 export const PlayerInfo = {
@@ -1093,8 +984,8 @@ export const PlayerInfo = {
     if (message.position !== undefined) {
       Coordinates.encode(message.position, writer.uint32(18).fork()).ldelim();
     }
-    if (message.signal !== undefined) {
-      Signal.encode(message.signal, writer.uint32(26).fork()).ldelim();
+    if (message.signal !== 0) {
+      writer.uint32(24).int32(message.signal);
     }
     if (message.remainingTimeMs !== 0) {
       writer.uint32(32).int32(message.remainingTimeMs);
@@ -1124,11 +1015,11 @@ export const PlayerInfo = {
           message.position = Coordinates.decode(reader, reader.uint32());
           continue;
         case 3:
-          if (tag !== 26) {
+          if (tag !== 24) {
             break;
           }
 
-          message.signal = Signal.decode(reader, reader.uint32());
+          message.signal = reader.int32() as any;
           continue;
         case 4:
           if (tag !== 32) {
@@ -1150,7 +1041,7 @@ export const PlayerInfo = {
     return {
       player: isSet(object.player) ? playerFromJSON(object.player) : 0,
       position: isSet(object.position) ? Coordinates.fromJSON(object.position) : undefined,
-      signal: isSet(object.signal) ? Signal.fromJSON(object.signal) : undefined,
+      signal: isSet(object.signal) ? woodTypeFromJSON(object.signal) : 0,
       remainingTimeMs: isSet(object.remainingTimeMs) ? globalThis.Number(object.remainingTimeMs) : 0,
     };
   },
@@ -1163,8 +1054,8 @@ export const PlayerInfo = {
     if (message.position !== undefined) {
       obj.position = Coordinates.toJSON(message.position);
     }
-    if (message.signal !== undefined) {
-      obj.signal = Signal.toJSON(message.signal);
+    if (message.signal !== 0) {
+      obj.signal = woodTypeToJSON(message.signal);
     }
     if (message.remainingTimeMs !== 0) {
       obj.remainingTimeMs = Math.round(message.remainingTimeMs);
@@ -1181,9 +1072,7 @@ export const PlayerInfo = {
     message.position = (object.position !== undefined && object.position !== null)
       ? Coordinates.fromPartial(object.position)
       : undefined;
-    message.signal = (object.signal !== undefined && object.signal !== null)
-      ? Signal.fromPartial(object.signal)
-      : undefined;
+    message.signal = object.signal ?? 0;
     message.remainingTimeMs = object.remainingTimeMs ?? 0;
     return message;
   },
@@ -1654,134 +1543,20 @@ export const GridUpdate_CellUpdate = {
   },
 };
 
-function createBaseMove(): Move {
-  return { direction: 0 };
-}
-
-export const Move = {
-  encode(message: Move, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.direction !== 0) {
-      writer.uint32(8).int32(message.direction);
-    }
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): Move {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMove();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          if (tag !== 8) {
-            break;
-          }
-
-          message.direction = reader.int32() as any;
-          continue;
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): Move {
-    return { direction: isSet(object.direction) ? directionFromJSON(object.direction) : 0 };
-  },
-
-  toJSON(message: Move): unknown {
-    const obj: any = {};
-    if (message.direction !== 0) {
-      obj.direction = directionToJSON(message.direction);
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<Move>, I>>(base?: I): Move {
-    return Move.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<Move>, I>>(object: I): Move {
-    const message = createBaseMove();
-    message.direction = object.direction ?? 0;
-    return message;
-  },
-};
-
-function createBaseMine(): Mine {
-  return { direction: 0 };
-}
-
-export const Mine = {
-  encode(message: Mine, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.direction !== 0) {
-      writer.uint32(8).int32(message.direction);
-    }
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): Mine {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMine();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          if (tag !== 8) {
-            break;
-          }
-
-          message.direction = reader.int32() as any;
-          continue;
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): Mine {
-    return { direction: isSet(object.direction) ? directionFromJSON(object.direction) : 0 };
-  },
-
-  toJSON(message: Mine): unknown {
-    const obj: any = {};
-    if (message.direction !== 0) {
-      obj.direction = directionToJSON(message.direction);
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<Mine>, I>>(base?: I): Mine {
-    return Mine.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<Mine>, I>>(object: I): Mine {
-    const message = createBaseMine();
-    message.direction = object.direction ?? 0;
-    return message;
-  },
-};
-
 function createBaseAction(): Action {
-  return { move: undefined, mine: undefined, signal: undefined };
+  return { move: undefined, mine: undefined, signal: 0 };
 }
 
 export const Action = {
   encode(message: Action, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.move !== undefined) {
-      Move.encode(message.move, writer.uint32(10).fork()).ldelim();
+      writer.uint32(8).int32(message.move);
     }
     if (message.mine !== undefined) {
-      Mine.encode(message.mine, writer.uint32(18).fork()).ldelim();
+      writer.uint32(16).int32(message.mine);
     }
-    if (message.signal !== undefined) {
-      Signal.encode(message.signal, writer.uint32(26).fork()).ldelim();
+    if (message.signal !== 0) {
+      writer.uint32(24).int32(message.signal);
     }
     return writer;
   },
@@ -1794,25 +1569,25 @@ export const Action = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
+          if (tag !== 8) {
             break;
           }
 
-          message.move = Move.decode(reader, reader.uint32());
+          message.move = reader.int32() as any;
           continue;
         case 2:
-          if (tag !== 18) {
+          if (tag !== 16) {
             break;
           }
 
-          message.mine = Mine.decode(reader, reader.uint32());
+          message.mine = reader.int32() as any;
           continue;
         case 3:
-          if (tag !== 26) {
+          if (tag !== 24) {
             break;
           }
 
-          message.signal = Signal.decode(reader, reader.uint32());
+          message.signal = reader.int32() as any;
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -1825,22 +1600,22 @@ export const Action = {
 
   fromJSON(object: any): Action {
     return {
-      move: isSet(object.move) ? Move.fromJSON(object.move) : undefined,
-      mine: isSet(object.mine) ? Mine.fromJSON(object.mine) : undefined,
-      signal: isSet(object.signal) ? Signal.fromJSON(object.signal) : undefined,
+      move: isSet(object.move) ? directionFromJSON(object.move) : undefined,
+      mine: isSet(object.mine) ? directionFromJSON(object.mine) : undefined,
+      signal: isSet(object.signal) ? woodTypeFromJSON(object.signal) : 0,
     };
   },
 
   toJSON(message: Action): unknown {
     const obj: any = {};
     if (message.move !== undefined) {
-      obj.move = Move.toJSON(message.move);
+      obj.move = directionToJSON(message.move);
     }
     if (message.mine !== undefined) {
-      obj.mine = Mine.toJSON(message.mine);
+      obj.mine = directionToJSON(message.mine);
     }
-    if (message.signal !== undefined) {
-      obj.signal = Signal.toJSON(message.signal);
+    if (message.signal !== 0) {
+      obj.signal = woodTypeToJSON(message.signal);
     }
     return obj;
   },
@@ -1850,68 +1625,9 @@ export const Action = {
   },
   fromPartial<I extends Exact<DeepPartial<Action>, I>>(object: I): Action {
     const message = createBaseAction();
-    message.move = (object.move !== undefined && object.move !== null) ? Move.fromPartial(object.move) : undefined;
-    message.mine = (object.mine !== undefined && object.mine !== null) ? Mine.fromPartial(object.mine) : undefined;
-    message.signal = (object.signal !== undefined && object.signal !== null)
-      ? Signal.fromPartial(object.signal)
-      : undefined;
-    return message;
-  },
-};
-
-function createBaseSignal(): Signal {
-  return { woodType: 0 };
-}
-
-export const Signal = {
-  encode(message: Signal, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.woodType !== 0) {
-      writer.uint32(8).int32(message.woodType);
-    }
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): Signal {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseSignal();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          if (tag !== 8) {
-            break;
-          }
-
-          message.woodType = reader.int32() as any;
-          continue;
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): Signal {
-    return { woodType: isSet(object.woodType) ? woodTypeFromJSON(object.woodType) : 0 };
-  },
-
-  toJSON(message: Signal): unknown {
-    const obj: any = {};
-    if (message.woodType !== 0) {
-      obj.woodType = woodTypeToJSON(message.woodType);
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<Signal>, I>>(base?: I): Signal {
-    return Signal.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<Signal>, I>>(object: I): Signal {
-    const message = createBaseSignal();
-    message.woodType = object.woodType ?? 0;
+    message.move = object.move ?? undefined;
+    message.mine = object.mine ?? undefined;
+    message.signal = object.signal ?? 0;
     return message;
   },
 };

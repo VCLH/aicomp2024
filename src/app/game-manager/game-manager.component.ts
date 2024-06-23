@@ -27,7 +27,7 @@ export class GameManagerComponent {
   isPlaying: boolean = false;
   gameRunner: GameRunner | null = null;
   locked: boolean = false;
-  speed: number = 5;
+  speed: number = 10;
   lastAutoPlay: number = Date.now();
 
   readonly BG_COLORS = BG_COLORS;
@@ -82,8 +82,8 @@ export class GameManagerComponent {
       players: allPlayers,
       gameLength: gameConfig.gameLength,
       currentTick: 0,
-      height: gameConfig.gameMap!.lengthUnits,
-      width: gameConfig.gameMap!.lengthUnits,
+      height: gameConfig.gameMap!.grid?.rows.length,
+      width: gameConfig.gameMap!.grid?.rows.length,
       grid: gameConfig.gameMap!.grid
     })
     for (const i in gameConfig.players) {

@@ -18,7 +18,7 @@
   <label class="col-sm-2 col-form-label">Bots</label>
   <ng-container *ngFor="let item of selectedBots; let i = index; trackBy: trackByIndex">
     <select class="form-control col-sm-1" [(ngModel)]="selectedBots[i]" [style.background]="BG_COLORS[i + 1]"
-      [style.color]="FG_COLORS[i + 1][0]">
+      [style.color]="FG_COLORS[i + 1]">
       <option [value]="bot.id" *ngFor="let bot of bots">{{ bot.description }}</option>
     </select>
   </ng-container>

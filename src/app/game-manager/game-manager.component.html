@@ -13,25 +13,6 @@
       </div>
     </div>
     <div class="row" *ngIf="game != null">
-      <div class="col-sm-2" style="padding-top: 6px; padding-bottom: 6px;">Current Soldiers</div>
-      <div class="col-sm-1 text-center" style="padding: 6px 0"
-        *ngFor="let item of isValidPlayer; let i = index; trackBy: trackByIndex">
-        <span *ngIf="item">
-          <span *ngIf="currentSoldiers[i] >= 0">{{ currentSoldiers[i] }}</span>
-          <span *ngIf="currentSoldiers[i] < 0">Rank {{ -currentSoldiers[i] }}</span>
-        </span>
-      </div>
-    </div>
-    <div class="row" *ngIf="game != null" style="margin-bottom: 12px">
-      <div class="col-sm-2"></div>
-      <div class="col-sm-8" style="display: flex; height: 8px">
-        <ng-container *ngFor="let item of isValidPlayer; let i = index; trackBy: trackByIndex">
-          <div *ngIf="currentSoldiers[i] >= 0" [style.flex]="currentSoldiers[i]" [style.background]="BG_COLORS[i + 1]">
-          </div>
-        </ng-container>
-      </div>
-    </div>
-    <div class="row" *ngIf="game != null">
       <div class="col-sm-2">
         <p>{{ this.game.currentTick }} / {{ this.gameConfig!.gameLength }}</p>
         <button *ngIf="!isPlaying" class="btn btn-block btn-success" (click)="gameResume()">Resume</button>
