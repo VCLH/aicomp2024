@@ -27,9 +27,9 @@ export class GameRunner {
   private playerStrategies: Map<proto.Player, Strategy>;
 
   private playerInfos: Map<proto.Player, proto.PlayerInfo>;
-  private playerView: proto.Row[];
-  private stoneDamage: number[][];
-  private lastMined: number[][];
+  private playerView: proto.Row[] = [];
+  private stoneDamage: number[][] = [];
+  private lastMined: number[][] = [];
   private activePressurePlates: Map<proto.WoodType, number>;
 
   private hasInitializedGame: boolean = false;
@@ -38,15 +38,18 @@ export class GameRunner {
   private tickNumber: number = 0;
   private tickSequence: proto.Player[] = [];
 
-
   // updates to be flushed
-  private gridUpdateCoordinates: proto.Coordinates[];
+  private gridUpdateCoordinates: proto.Coordinates[] = [];
 
   constructor(game: proto.Game, players: Map<proto.Player, Strategy>) {
     this.game = game;
     this.players = [];
     this.playerStrategies = new Map;
     this.playerInfos = new Map;
+    this.activePressurePlates = new Map;
+    Array(11).forEach((v, k) => {
+      this.activePressurePlates.set(proto.woodTypeFromJSON(k), 0);
+    });
     for (const [player, strategy] of players) {
       this.players.push(player);
       this.playerStrategies.set(player, strategy);
@@ -115,7 +118,7 @@ export class GameRunner {
         cell: this.game.grid!.rows[c.x].cells[c.y],
         coordinates: c
       })),
-      playerInfoUpdates: [this.playerInfos[player]]
+      playerInfoUpdates: [this.playerInfos.get(player)!]
     });
 
 
@@ -238,9 +241,10 @@ export class GameRunner {
     // leaving pressure plate
     if (cell.cellType?.pressurePlateCell) {
       const woodType = cell.cellType.pressurePlateCell.woodType;
-      this.activePressurePlates[woodType]--;
+      const newNumPlayersOnPlate = (this.activePressurePlates.get(woodType) ?? 0) - 1;
+      this.activePressurePlates.set(woodType, newNumPlayersOnPlate);
 
-      if (this.activePressurePlates[woodType] == 0) {
+      if (newNumPlayersOnPlate == 0) {
         for (const c of this.getAllDoors(woodType)) {
           const doorCell = this.game.grid!.rows[c.x].cells[c.y];
           const door = doorCell.cellType!.emptyCell!.door!;
