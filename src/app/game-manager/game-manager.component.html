@@ -1,0 +1,47 @@
+<hr>
+<div class="row">
+  <div class="col-sm-12">
+    <div class="row">
+      <div class="col-sm-2">Speed<br><input type="number" class="form-control" [(ngModel)]="speed"></div>
+      <div class="col-sm-1 text-center" *ngFor="let item of isValidPlayer; let i = index; trackBy: trackByIndex">
+        <ng-container *ngIf="item">
+          <span>{{ botConfigs.get(i + 1)!.description }}</span><br>
+          <button class="btn btn-info btn-sm" (click)="gameDebug(i + 1)">
+            {{ game ? remainingTimes[i] : 'Debug' }}
+          </button>
+        </ng-container>
+      </div>
+    </div>
+    <div class="row" *ngIf="game != null">
+      <div class="col-sm-2" style="padding-top: 6px; padding-bottom: 6px;">Current Soldiers</div>
+      <div class="col-sm-1 text-center" style="padding: 6px 0"
+        *ngFor="let item of isValidPlayer; let i = index; trackBy: trackByIndex">
+        <span *ngIf="item">
+          <span *ngIf="currentSoldiers[i] >= 0">{{ currentSoldiers[i] }}</span>
+          <span *ngIf="currentSoldiers[i] < 0">Rank {{ -currentSoldiers[i] }}</span>
+        </span>
+      </div>
+    </div>
+    <div class="row" *ngIf="game != null" style="margin-bottom: 12px">
+      <div class="col-sm-2"></div>
+      <div class="col-sm-8" style="display: flex; height: 8px">
+        <ng-container *ngFor="let item of isValidPlayer; let i = index; trackBy: trackByIndex">
+          <div *ngIf="currentSoldiers[i] >= 0" [style.flex]="currentSoldiers[i]" [style.background]="BG_COLORS[i + 1]">
+          </div>
+        </ng-container>
+      </div>
+    </div>
+    <div class="row" *ngIf="game != null">
+      <div class="col-sm-2">
+        <p>{{ this.game.currentTick }} / {{ this.gameConfig!.gameLength }}</p>
+        <button *ngIf="!isPlaying" class="btn btn-block btn-success" (click)="gameResume()">Resume</button>
+        <button *ngIf="!isPlaying" class="btn btn-block btn-primary" (click)="gameTick()">Tick</button>
+        <button *ngIf="!isPlaying" class="btn btn-block btn-primary" (click)="gameStep()">Step</button>
+        <button *ngIf="isPlaying" class="btn btn-block btn-danger" (click)="gamePause()">Pause</button>
+      </div>
+      <div class="col-sm-8" style="display: flex; align-items: center; flex-direction: column;">
+        <app-grid-renderer [grid]="game.grid!"></app-grid-renderer>
+      </div>
+    </div>
+  </div>
+</div>

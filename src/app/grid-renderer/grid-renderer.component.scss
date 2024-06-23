@@ -1,0 +1,71 @@
+.grid {
+  border-collapse: collapse;
+  display: inline-block;
+  flex-direction: column;
+  margin-bottom: 40px;
+
+  .row {
+    display: flex;
+    height: 16px;
+
+    .cell {
+      width: 16px;
+      height: 16px;
+      text-align: center;
+      flex: 1;
+      align-items: center;
+      justify-content: center;
+      display: flex;
+      position: relative;
+      
+      .overlay {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-image: url('/assets/blocks.webp');
+        pointer-events: none;
+      }
+
+      .pressure {
+        background-position-y: -16px;
+      }
+
+      .door-right {
+        left: 8px;
+      }
+
+      .door-down {
+        bottom: -7px;
+      }
+
+      .door-left {
+        left: -8px;
+      }
+
+      .door-up {
+        top: -9px;
+      }
+
+      .chest {
+        background-position-x: -160px;
+        background-position-y: -32px;
+        font-size: 9px;
+        color: white;
+        padding-top: 4px;
+        font-family: Verdana;
+      }
+
+      .tile {
+        background-position-y: -32px;
+      }
+
+      &.bedrock .tile {
+        background-position-y: -16px;
+      }
+
+      &.stone .tile {
+        background-position-y: 0px;
+      }
+    }
+  }
+}

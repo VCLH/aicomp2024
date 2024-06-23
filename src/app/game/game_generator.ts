@@ -46,16 +46,14 @@ export class GameGenerator {
     return this.createCell(proto.CellType.create({ chestCell: proto.CellType_ChestCell.create({ score: score }) }));
   }
 
-  // function to generate a 7x7 unit surrounded by stone cells with special middle cells
-  generate_unit(middle: proto.Cell): proto.Grid {
+  // function to generate a 7x7 unit surrounded by stone cells
+  generate_unit(): proto.Grid {
     const grid = proto.Grid.create();
     for (let i = 0; i < 7; ++i) {
       const row: proto.Cell[] = [];
       for (let j = 0; j < 7; ++j) {
         if (i == 0 || i == 6 || j == 0 || j == 6) { // edges
           row.push(this.createStoneCell());
-        } else if (i == 3 && j == 3) { // middle
-          row.push(middle);
         } else {
           row.push(this.createEmptyCell());
         }
@@ -85,10 +83,7 @@ export class GameGenerator {
     // generate the units
     for (let i = 0; i < config.lengthUnits; ++i) {
       for (let j = 0; j < config.lengthUnits; ++j) {
-        const middle = r(100) <= pressurePlateDensity ?
-          this.createPressurePlateCell(proto.woodTypeFromJSON(r(numWoodType))) :
-          this.createEmptyCell();
-        const unit = this.generate_unit(middle);
+        const unit = this.generate_unit();
         for (let ii = 0; ii < unitSize; ++ii) {
           for (let jj = 0; jj < unitSize; ++jj) {
             grid[i * unitSize + ii + 1][j * unitSize + jj + 1] = unit.rows[ii].cells[jj];
@@ -103,9 +98,12 @@ export class GameGenerator {
       for (let i = 0; i < config.lengthUnits; ++i) {
         const row = i;
         const col = perm[i];
-        grid[row * unitSize + 1][col * unitSize + 1] = this.createChestCell(chestDistribution());
+        grid[row * unitSize + 4][col * unitSize + 4] = this.createChestCell(Math.ceil(chestDistribution()));
       }
     }
+
+    const woodTypePermutation = Array.from(Array(10).keys());
+    shuffleArray(woodTypePermutation);
 
     // generate doors
     let possibleDoors: { x1: number, y1: number, x2: number, y2: number }[] = [];
@@ -114,32 +112,33 @@ export class GameGenerator {
         if (i < config.lengthUnits - 1) { // down
           possibleDoors.push({
             x1: i * unitSize + 1 + unitSize - 1,
-            y1: j * unitSize + 1 + unitSize / 2,
+            y1: j * unitSize + 1 + Math.floor(unitSize / 2),
             x2: (i + 1) * unitSize + 1,
-            y2: j * unitSize + 1 + unitSize / 2,
+            y2: j * unitSize + 1 + Math.floor(unitSize / 2),
           });
         }
         if (j < config.lengthUnits - 1) { // right
           possibleDoors.push({
-            x1: i * unitSize + 1 + unitSize / 2,
+            x1: i * unitSize + 1 + Math.floor(unitSize / 2),
             y1: j * unitSize + 1 + unitSize - 1,
-            x2: i * unitSize + 1 + unitSize / 2,
+            x2: i * unitSize + 1 + Math.floor(unitSize / 2),
             y2: (j + 1) * unitSize + 1,
           });
         }
       }
     }
     shuffleArray(possibleDoors);
-    const nDoors = Math.floor(possibleDoors.length * doorDensity);
+    const nDoors = Math.floor(possibleDoors.length * doorDensity / 100);
     for (let i = 0; i < nDoors; ++i) {
       const door = possibleDoors[i];
-      const doorDirection = door.x1 == door.x2 ? proto.Direction.DOWN : proto.Direction.RIGHT;
-      const woodType = proto.woodTypeFromJSON(r(numWoodType));
+      const doorDirection = door.x1 == door.x2 ? proto.Direction.RIGHT : proto.Direction.DOWN;
+      // Ensure each type has a door
+      const woodType = i < numWoodType ? i : proto.woodTypeFromJSON(r(numWoodType));
       grid[door.x1][door.y1].cellType = proto.CellType.create({
         emptyCell: proto.CellType_EmptyCell.create({
           door: proto.Door.create({
             direction: doorDirection,
-            woodType: woodType,
+            woodType: woodTypePermutation[woodType] + 1,
             isOpen: false,
           }),
         }),
@@ -147,10 +146,39 @@ export class GameGenerator {
       grid[door.x2][door.y2].cellType = proto.CellType.create({
         emptyCell: proto.CellType_EmptyCell.create({
           door: proto.Door.create({
-            direction: doorDirection ^ 1,
-            woodType: woodType,
+            direction: doorDirection <= 2 ? doorDirection + 2 : doorDirection - 2,
+            woodType: woodTypePermutation[woodType] + 1,
             isOpen: false,
           }),
+        }),
+      });
+    }
+
+
+    // generate pressure plates
+    const possiblePlates: { x: number, y: number }[] = [];
+    for (let i = 0; i < config.lengthUnits; ++i) {
+      for (let j = 0; j < config.lengthUnits; ++j) {
+        const x = i * unitSize + 4;
+        const y = j * unitSize + 4;
+        if (grid[x][y].cellType?.chestCell) {
+          continue;
+        }
+        possiblePlates.push({
+          x, y
+        });
+      }
+    }
+    console.log(possiblePlates);
+    shuffleArray(possiblePlates);
+    const nPlates = Math.floor(possiblePlates.length * pressurePlateDensity / 100);
+    for (let i = 0; i < nPlates; ++i) {
+      const plate = possiblePlates[i];
+      // Ensure each type has a plate
+      const woodType = i < numWoodType ? i : proto.woodTypeFromJSON(r(numWoodType));
+      grid[plate.x][plate.y].cellType = proto.CellType.create({
+        pressurePlateCell: proto.CellType_PressurePlateCell.create({
+          woodType: woodTypePermutation[woodType] + 1
         }),
       });
     }

@@ -1,0 +1,87 @@
+<div class="row">
+  <div class="col-lg-7">
+    <h3>Maps</h3>
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Description</th>
+          <th>Size</th>
+          <th>Players</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody *ngFor="let row of gameMaps">
+        <tr>
+          <td>{{ row.id }}</td>
+          <td>{{ row.description }}</td>
+          <td>{{ row.gameMap.height }} x {{ row.gameMap.width }}</td>
+          <td>{{ row.gameMap.players.length }}</td>
+          <td>
+            <button class="btn btn-sm btn-primary" (click)="viewMap(row.gameMap)">View</button>
+            <button class="btn btn-sm btn-danger" (click)="deleteGameMap(row.id)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col-lg-5">
+    <div class="row">
+      <div class="col-sm-12">
+        <h3>Generate new map</h3>
+        <div class="form-group row">
+          <label class="col-sm-2 col-form-label">Players</label>
+          <input type="number" class="form-control col-sm-2" [(ngModel)]="generatorConfig.numPlayers">
+          <div class="col-sm-1"></div>
+          <button class="btn btn-sm btn-primary col-sm-1" (click)="usePreset(2)">2</button>
+          <button class="btn btn-sm btn-primary col-sm-1" (click)="usePreset(3)">3</button>
+          <button class="btn btn-sm btn-primary col-sm-1" (click)="usePreset(4)">4</button>
+          <button class="btn btn-sm btn-primary col-sm-1" (click)="usePreset(5)">5</button>
+          <button class="btn btn-sm btn-primary col-sm-1" (click)="usePreset(6)">6</button>
+          <button class="btn btn-sm btn-primary col-sm-1" (click)="usePreset(7)">7</button>
+          <button class="btn btn-sm btn-primary col-sm-1" (click)="usePreset(8)">8</button>
+        </div>
+        <div class="form-group row">
+          <label class="col-sm-2 col-form-label">Units</label>
+          <input type="text" class="form-control col-sm-2" [(ngModel)]="generatorConfig.units">
+          <label class="col-sm-3 col-form-label">Wood Types</label>
+          <input type="text" class="form-control col-sm-2" [(ngModel)]="generatorConfig.numWoodType">
+          <label class="col-sm-2 col-form-label">Chests</label>
+          <input type="checkbox" class="form-control col-sm-1" [(ngModel)]="generatorConfig.height">
+        </div>
+        <div class="form-group row">
+          <label class="col-sm-3 col-form-label">Chest Min</label>
+          <input type="text" class="form-control col-sm-3" [(ngModel)]="generatorConfig.minChestReward">
+          <label class="col-sm-3 col-form-label">Chest Max</label>
+          <input type="text" class="form-control col-sm-3" [(ngModel)]="generatorConfig.maxChestReward">
+        </div>
+        <div class="form-group row">
+          <label class="col-sm-3 col-form-label" style="padding-top: 0; padding-bottom: 0">Pressure Plate<br>Density</label>
+          <input type="text" class="form-control col-sm-3" [(ngModel)]="generatorConfig.pressurePlateDensity">
+          <label class="col-sm-3 col-form-label">Door Density</label>
+          <input type="text" class="form-control col-sm-3" [(ngModel)]="generatorConfig.doorDensity">
+        </div>
+        <div class="form-group row">
+          <div class="col-sm-12">
+            <button class="btn btn-primary" (click)="generate()">Generate</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12">
+        <h3>Map viewer</h3>
+        <div class="col-sm-12">
+          <app-grid-renderer [grid]="grid"></app-grid-renderer>
+        </div>
+        <div class="form-group row">
+          <label class="col-sm-3 col-form-label">Description</label>
+          <input type="text" class="form-control col-sm-6" [(ngModel)]="description">
+          <div class="col-sm-3">
+            <button class="btn btn-warning" (click)="saveGameMap()">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
