@@ -59,6 +59,21 @@ export class GameRunner {
     }
   }
 
+  timedPlayerExecution<T>(player: proto.Player, continuation: (strategy: Strategy) => T) : T | undefined {
+    // call player strategy code with a timer
+    const strategy = this.playerStrategies.get(player);
+    const playerInfo = this.playerInfos.get(player);
+    if (strategy && playerInfo) {
+      const startTime = Date.now();
+      const result = continuation(strategy);
+      const elapsedTime = Math.max(0, Date.now() - startTime); // clock drift
+      playerInfo.remainingTimeMs -= elapsedTime;
+      // note that timer update is hidden from the player code to reduce obfuscation
+      return result;
+    }
+    return;
+  }
+
   step(): boolean {
     // return value indicating if the game has ended
     if (!this.hasInitializedGame) {
@@ -83,7 +98,10 @@ export class GameRunner {
     const player = this.tickSequence.shift()!;
 
     this.gridUpdateCoordinates = [];
-    const action = this.playerStrategies.get(player)?.performAction();
+
+    console.log('bruh')
+
+    const action = this.timedPlayerExecution(player, strategy => strategy.performAction());
     if (action?.move) {
       this.handleMove(player, action.move);
     }
@@ -118,14 +136,17 @@ export class GameRunner {
       cell: this.game.grid!.rows[c.x].cells[c.y],
       coordinates: c
     }));
-    const playerInfoUpdates = [this.playerInfos.get(player)!];
 
+
+    const playerInfoUpdates = [this.playerInfos.get(player)!];
     for (const player of this.players) {
       // We must create a new one for each player.
-      this.playerStrategies.get(player)?.handleGridUpdate(proto.GridUpdate.create({
-        cellUpdates,
-        playerInfoUpdates
-      }));
+      this.timedPlayerExecution(player, strategy => {
+        strategy.handleGridUpdate(proto.GridUpdate.create({
+          cellUpdates,
+          playerInfoUpdates
+        }))
+      });
     }
 
     return this.tickSequence.length == 0;
@@ -133,7 +154,9 @@ export class GameRunner {
 
   debug(player: proto.Player) {
     try {
-      this.playerStrategies.get(player)?.debug();
+      this.timedPlayerExecution(player, (strategy) => {
+        strategy.debug();
+      });
     } catch (e) {
 
     }
@@ -196,7 +219,7 @@ export class GameRunner {
         assignedColor: player
       });
       //TODO: add timer
-      this.playerStrategies.get(player)?.init(playerGame);
+      this.timedPlayerExecution(player, (strategy) => strategy.init(playerGame))
     }
   }
 

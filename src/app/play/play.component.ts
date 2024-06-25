@@ -25,7 +25,6 @@ export class PlayComponent {
   constructor(private data: DataService, private message: MessageService) {
     this.loadGameMaps();
     this.loadBots();
-
   }
 
   private loadGameMaps() {
