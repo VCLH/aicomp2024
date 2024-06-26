@@ -4,6 +4,7 @@
   flex-direction: column;
   margin-bottom: 40px;
   position: relative;
+  image-rendering: pixelated;
 
   .players {
     position: absolute;
@@ -17,8 +18,14 @@
       position: absolute;
       width: 16px;
       height: 16px;
-      background-image: url('/assets/avatars.webp');
-      background-size: 128px 16px;
+      transition: transform 30ms;
+
+      .avatar {
+        width: 16px;
+        height: 16px;
+        background-image: url('/assets/avatars.webp');
+        background-size: 128px 16px;
+      }
     }
   }
 
