@@ -1,5 +1,5 @@
 <div class="row">
-  <div class="col-lg-7">
+  <div class="col-lg-6">
     <h3>Maps</h3>
     <table class="table table-bordered">
       <thead>
@@ -8,6 +8,7 @@
           <th>Description</th>
           <th>Size</th>
           <th>Players</th>
+          <th>Stone Life</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -17,6 +18,7 @@
           <td>{{ row.description }}</td>
           <td>{{ row.gameMap.lengthUnits }} units</td>
           <td>{{ row.gameMap.players.length }}</td>
+          <td>{{ row.gameMap.grid.stoneLife || 5 }}</td>
           <td>
             <button class="btn btn-sm btn-primary" (click)="viewMap(row.gameMap)">View</button>
             <button class="btn btn-sm btn-danger" (click)="deleteGameMap(row.id)">Delete</button>
@@ -25,7 +27,7 @@
       </tbody>
     </table>
   </div>
-  <div class="col-lg-5">
+  <div class="col-lg-6">
     <div class="row">
       <div class="col-sm-12">
         <h3>Generate new map</h3>
@@ -44,16 +46,18 @@
         <div class="form-group row">
           <label class="col-sm-2 col-form-label">Units</label>
           <input type="text" class="form-control col-sm-2" [(ngModel)]="generatorConfig.units">
-          <label class="col-sm-3 col-form-label">Wood Types</label>
+          <label class="col-sm-2 col-form-label">Wood Types</label>
           <input type="text" class="form-control col-sm-2" [(ngModel)]="generatorConfig.numWoodType">
-          <label class="col-sm-2 col-form-label">Chests</label>
-          <input type="checkbox" class="form-control col-sm-1" [(ngModel)]="generatorConfig.haveChest">
+          <label class="col-sm-2 col-form-label">Stone Life</label>
+          <input type="text" class="form-control col-sm-2" [(ngModel)]="generatorConfig.stoneLife">
         </div>
         <div class="form-group row">
+          <label class="col-sm-1 col-form-label">Chests</label>
+          <input type="checkbox" class="form-control col-sm-1" [(ngModel)]="generatorConfig.haveChest">
           <label class="col-sm-3 col-form-label">Chest Min</label>
-          <input type="text" class="form-control col-sm-3" [(ngModel)]="generatorConfig.minChestReward">
+          <input type="text" class="form-control col-sm-2" [(ngModel)]="generatorConfig.minChestReward">
           <label class="col-sm-3 col-form-label">Chest Max</label>
-          <input type="text" class="form-control col-sm-3" [(ngModel)]="generatorConfig.maxChestReward">
+          <input type="text" class="form-control col-sm-2" [(ngModel)]="generatorConfig.maxChestReward">
         </div>
         <div class="form-group row">
           <label class="col-sm-3 col-form-label" style="padding-top: 0; padding-bottom: 0">Pressure Plate<br>Density</label>

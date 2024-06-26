@@ -17,10 +17,11 @@ export class MapListComponent {
     units: '3',
     haveChest: true,
     numWoodType: '2',
-    pressurePlateDensity: '50',
-    doorDensity: '25',
+    pressurePlateDensity: '70',
+    doorDensity: '35',
     minChestReward: '25',
     maxChestReward: '50',
+    stoneLife: '10',
   }
   gameMap: proto.GameMap | null = null;
   grid: proto.Grid | null = null;
@@ -48,8 +49,9 @@ export class MapListComponent {
     }
     this.gameMap = generator.generate(proto.GameMap.create({
       players,
-      lengthUnits: parseInt(this.generatorConfig.units)
+      lengthUnits: parseInt(this.generatorConfig.units),
     }),
+      parseInt(this.generatorConfig.stoneLife),
       this.generatorConfig.haveChest,
       parseInt(this.generatorConfig.numWoodType),
       parseInt(this.generatorConfig.pressurePlateDensity),
@@ -57,8 +59,6 @@ export class MapListComponent {
       () => this.generateChestReward(parseInt(this.generatorConfig.minChestReward), parseInt(this.generatorConfig.maxChestReward))
     );
     this.grid = this.gameMap.grid!;
-
-
   }
 
   public saveGameMap() {
@@ -73,18 +73,6 @@ export class MapListComponent {
     this.data.deleteGameMap(id).subscribe(() => {
       this.loadGameMaps();
     });
-  }
-
-  private convertToGame(gameConfig: proto.GameConfig): proto.Game {
-    const game = proto.Game.create({
-      width: gameConfig.gameMap!.lengthUnits * 7 + 2,
-      height: gameConfig.gameMap!.lengthUnits * 7 + 2,
-      grid: gameConfig.gameMap!.grid,
-      players: gameConfig.players.map(playerConfig => playerConfig.player),
-      currentTick: 0,
-      gameLength: gameConfig.gameLength
-    });
-    return game;
   }
 
   private loadGameMaps() {
@@ -113,7 +101,7 @@ export class MapListComponent {
     */
     this.generatorConfig.numPlayers = numPlayers;
     this.generatorConfig.units = numPlayers <= 3 ? '3' : '4';
-    this.generatorConfig.pressurePlateDensity = numPlayers <= 3 ? '40' : '20';
-    this.generatorConfig.doorDensity = numPlayers <= 3 ? '20' : '10';
+    this.generatorConfig.pressurePlateDensity = numPlayers <= 3 ? '70' : '50';
+    this.generatorConfig.doorDensity = numPlayers <= 3 ? '35' : '25';
   }
 }

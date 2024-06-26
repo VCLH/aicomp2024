@@ -64,7 +64,13 @@ export class GameGenerator {
   }
 
   // Generates the map. Visibility is not set here.
-  generate(config: proto.GameMap, haveChest: boolean, numWoodType: number, pressurePlateDensity: number, doorDensity: number, chestDistribution: () => number): proto.GameMap {
+  generate(config: proto.GameMap,
+    stoneLife: number,
+    haveChest: boolean,
+    numWoodType: number,
+    pressurePlateDensity:number,
+    doorDensity: number,
+    chestDistribution: () => number): proto.GameMap {
     const grid: proto.Cell[][] = [];
     const game = proto.GameMap.create(config);
     const nPlayers = config.players.length;
@@ -187,7 +193,7 @@ export class GameGenerator {
     }
 
     // copy the grid over to game
-    game.grid = proto.Grid.create();
+    game.grid = proto.Grid.create({ stoneLife });
     for (let i = 0; i < grid.length; ++i) {
       const row = proto.Row.create({ cells: grid[i] });
       game.grid.rows.push(row);
@@ -197,7 +203,7 @@ export class GameGenerator {
     const playerPositionShuffler = [];
     for (let dx = 1; dx < unitSize - 1; ++dx) {
       for (let dy = 1; dy < unitSize - 1; ++dy) {
-        if (dx == dy && dx == Math.ceil(unitSize / 2)) {
+        if (dx == dy && dx == Math.floor(unitSize / 2)) {
           continue;
         }
         playerPositionShuffler.push({ dx, dy });

@@ -82,6 +82,7 @@ message PlayerInfo {
 message Grid {
   repeated Row rows = 1;
   repeated PlayerInfo player_infos = 2;
+  int32 stone_life = 3; // number of mine actions required to break a stone
 }
 message Game {
   repeated Player players = 1;

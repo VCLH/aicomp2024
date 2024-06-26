@@ -284,6 +284,8 @@ export interface PlayerInfo {
 export interface Grid {
   rows: Row[];
   playerInfos: PlayerInfo[];
+  /** number of mine actions required to break a stone */
+  stoneLife: number;
 }
 
 export interface Game {
@@ -1079,7 +1081,7 @@ export const PlayerInfo = {
 };
 
 function createBaseGrid(): Grid {
-  return { rows: [], playerInfos: [] };
+  return { rows: [], playerInfos: [], stoneLife: 0 };
 }
 
 export const Grid = {
@@ -1089,6 +1091,9 @@ export const Grid = {
     }
     for (const v of message.playerInfos) {
       PlayerInfo.encode(v!, writer.uint32(18).fork()).ldelim();
+    }
+    if (message.stoneLife !== 0) {
+      writer.uint32(24).int32(message.stoneLife);
     }
     return writer;
   },
@@ -1114,6 +1119,13 @@ export const Grid = {
 
           message.playerInfos.push(PlayerInfo.decode(reader, reader.uint32()));
           continue;
+        case 3:
+          if (tag !== 24) {
+            break;
+          }
+
+          message.stoneLife = reader.int32();
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1129,6 +1141,7 @@ export const Grid = {
       playerInfos: globalThis.Array.isArray(object?.playerInfos)
         ? object.playerInfos.map((e: any) => PlayerInfo.fromJSON(e))
         : [],
+      stoneLife: isSet(object.stoneLife) ? globalThis.Number(object.stoneLife) : 0,
     };
   },
 
@@ -1140,6 +1153,9 @@ export const Grid = {
     if (message.playerInfos?.length) {
       obj.playerInfos = message.playerInfos.map((e) => PlayerInfo.toJSON(e));
     }
+    if (message.stoneLife !== 0) {
+      obj.stoneLife = Math.round(message.stoneLife);
+    }
     return obj;
   },
 
@@ -1150,6 +1166,7 @@ export const Grid = {
     const message = createBaseGrid();
     message.rows = object.rows?.map((e) => Row.fromPartial(e)) || [];
     message.playerInfos = object.playerInfos?.map((e) => PlayerInfo.fromPartial(e)) || [];
+    message.stoneLife = object.stoneLife ?? 0;
     return message;
   },
 };

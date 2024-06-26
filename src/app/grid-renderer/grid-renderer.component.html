@@ -13,7 +13,7 @@
       [class.bedrock]="cell.cellType.bedrockCell"
       [class.stone]="cell.cellType.stoneCell"
       [style.background]="cell.firstVisitPlayer ? BG_COLORS[cell.firstVisitPlayer] : ''">
-      <div class="overlay tile"></div>
+      <div class="overlay tile" [style.backgroundPositionX]="stoneLifeStyle(cell, grid.stoneLife)"></div>
       <div class="overlay pressure" *ngIf="cell.cellType.pressurePlateCell" [style.backgroundPositionX]="-cell.cellType.pressurePlateCell.woodType * 16 + 'px'"></div>
       <div class="overlay door-right" *ngIf="cell.cellType.emptyCell && cell.cellType.emptyCell.door && cell.cellType.emptyCell.door.direction == 1"  [style.backgroundPositionX]="-cell.cellType.emptyCell.door.woodType * 16 + 'px'"></div>
       <div class="overlay door-up" *ngIf="cell.cellType.emptyCell && cell.cellType.emptyCell.door && cell.cellType.emptyCell.door.direction == 2"  [style.backgroundPositionX]="-cell.cellType.emptyCell.door.woodType * 16 + 'px'"></div>

@@ -11,4 +11,14 @@ export class GridRendererComponent {
   readonly BG_COLORS = BG_COLORS;
   readonly FG_COLORS = FG_COLORS;
 
+  stoneLifeStyle(cell: proto.Cell, stoneLife: number) {
+    if (!cell.cellType?.stoneCell) {
+      return '';
+    }
+    if (cell.cellType.stoneCell.mineCount == 0) {
+      return '';
+    }
+    const stage = Math.ceil(cell.cellType.stoneCell.mineCount * 6.0 / (stoneLife || 5));
+    return -16 * stage + 'px';
+  }
 }

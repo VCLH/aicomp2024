@@ -2,7 +2,7 @@ import { Strategy } from "../strategy/strategy";
 import * as proto from "../game";
 
 const UNIT_LENGTH = 7;
-const STONE_HP = 5;
+const DEFAULT_STONE_HP = 5;
 
 function offset(direction: proto.Direction) {
   switch (direction) {
@@ -354,9 +354,10 @@ export class GameRunner {
     }
     if (newCell.cellType?.stoneCell) {
       this.stoneDamage[new_x][new_y]++;
+      newCell.cellType.stoneCell.mineCount++;
       this.lastMined[new_x][new_y] = this.tickNumber;
 
-      if (this.stoneDamage[new_x][new_y] == STONE_HP) {
+      if (this.stoneDamage[new_x][new_y] == (this.game!.grid!.stoneLife || DEFAULT_STONE_HP)) {
         // stone dead
         newCell.cellType = proto.CellType.create({ emptyCell: {} });
         this.gridUpdateCoordinates.push(proto.Coordinates.create({

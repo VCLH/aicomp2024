@@ -74,7 +74,7 @@
       }
 
       .tile {
-        background-position-y: -32px;
+        background-position-y: 0px;
       }
 
       &.bedrock .tile {
@@ -83,7 +83,6 @@
 
       &.stone .tile {
         background-position-y: -32px;
-        background-position-x: -16px;
       }
     }
   }

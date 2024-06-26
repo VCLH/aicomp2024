@@ -85,7 +85,7 @@ export class GameManagerComponent {
       currentTick: 0,
       height: gameConfig.gameMap!.grid?.rows.length,
       width: gameConfig.gameMap!.grid?.rows.length,
-      grid: gameConfig.gameMap!.grid
+      grid: gameConfig.gameMap!.grid,
     })
     for (const i in gameConfig.players) {
       const playerInfo = game.grid!.playerInfos[i];
