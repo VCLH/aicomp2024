@@ -87,3 +87,41 @@
     }
   }
 }
+
+
+.signals {
+  display: flex;
+  width: auto;
+  flex-direction: row;
+  align-items: center;
+  padding: 10px;
+
+  .signal {
+    width: 60px;
+    height: 30px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-evenly;
+
+    .player {
+      width: 16px;
+      height: 16px;
+      background-image: url('/assets/avatars.webp');
+      background-size: 128px 16px;
+    }
+
+    .pressure {
+      width: 16px;
+      height: 16px;
+      background-position-y: -16px;
+      background-image: url('/assets/blocks.webp');
+    }
+  }
+}
+
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}

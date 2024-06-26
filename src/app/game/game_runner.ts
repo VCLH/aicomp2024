@@ -31,7 +31,7 @@ export class GameRunner {
   private stoneDamage: number[][] = [];
   private lastMined: number[][] = [];
   private activePressurePlates: Map<proto.WoodType, number>;
-
+  
   private hasInitializedGame: boolean = false;
 
   // In each tick, each player takes one action
@@ -59,7 +59,24 @@ export class GameRunner {
     }
   }
 
-  timedPlayerExecution<T>(player: proto.Player, continuation: (strategy: Strategy) => T) : T | undefined {
+  computeScore(): number {
+    let sum = 0;
+    if (this.game.grid) {
+      for (const row of this.game.grid.rows) {
+        for (const cell of row.cells) {
+          if (cell.firstVisitPlayer > 0) {
+            sum++;
+            if (cell.cellType?.chestCell) {
+              sum += cell.cellType.chestCell.score;
+            }
+          }
+        }
+      }
+    }
+    return sum; 
+  }
+
+  private timedPlayerExecution<T>(player: proto.Player, continuation: (strategy: Strategy) => T) : T | undefined {
     // call player strategy code with a timer
     const strategy = this.playerStrategies.get(player);
     const playerInfo = this.playerInfos.get(player);
@@ -98,15 +115,19 @@ export class GameRunner {
     const player = this.tickSequence.shift()!;
 
     this.gridUpdateCoordinates = [];
-
-    console.log('bruh')
-
     const action = this.timedPlayerExecution(player, strategy => strategy.performAction());
     if (action?.move) {
       this.handleMove(player, action.move);
     }
     if (action?.mine) {
       this.handleMine(player, action.mine);
+    }
+    if (action?.signal) {
+      // handle signal
+      const playerInfo = this.playerInfos?.get(player);
+      if (playerInfo) {
+        playerInfo.signal = action.signal;
+      }
     }
 
     if (this.tickSequence.length == 0) {
@@ -257,8 +278,8 @@ export class GameRunner {
       return;
     }
 
-    const new_cell = this.game!.grid!.rows[new_x].cells[new_y];
-    if (new_cell.cellType?.bedrockCell || new_cell.cellType?.stoneCell || new_cell.cellType?.chestCell) {
+    const newCell = this.game!.grid!.rows[new_x].cells[new_y];
+    if (newCell.cellType?.bedrockCell || newCell.cellType?.stoneCell || newCell.cellType?.chestCell) {
       // cannot walk onto bedrock / stone / chest
       return;
     }
@@ -288,8 +309,8 @@ export class GameRunner {
     info.position = proto.Coordinates.create({ x: new_x, y: new_y });
 
     // update visited
-    if (new_cell.firstVisitPlayer == proto.Player.INVALID) {
-      new_cell.firstVisitPlayer = player;
+    if (newCell.firstVisitPlayer == proto.Player.INVALID) {
+      newCell.firstVisitPlayer = player;
       this.gridUpdateCoordinates.push(proto.Coordinates.create({
         x: new_x, y: new_y
       }));
@@ -297,8 +318,8 @@ export class GameRunner {
     }
 
     // entering pressure plate
-    if (new_cell.cellType?.pressurePlateCell) {
-      const woodType = new_cell.cellType.pressurePlateCell.woodType;
+    if (newCell.cellType?.pressurePlateCell) {
+      const woodType = newCell.cellType.pressurePlateCell.woodType;
       this.activePressurePlates.set(woodType, 1 + (this.activePressurePlates.get(woodType) ?? 0));
 
       for (const c of this.getAllDoors(woodType)) {
@@ -323,21 +344,21 @@ export class GameRunner {
     if (!this.isCell(new_x, new_y)) {
       return;
     }
-    const new_cell = this.game!.grid!.rows[new_x].cells[new_y];
+    const newCell = this.game!.grid!.rows[new_x].cells[new_y];
 
-    if (new_cell.cellType?.chestCell && !new_cell.cellType.chestCell.isOpened) {
-      new_cell.cellType.chestCell.isOpened = true;
+    if (newCell.cellType?.chestCell && !newCell.cellType.chestCell.isOpened) {
+      newCell.cellType.chestCell.isOpened = true;
       this.gridUpdateCoordinates.push(proto.Coordinates.create({
         x: new_x, y: new_y
       }))
     }
-    if (new_cell.cellType?.stoneCell) {
+    if (newCell.cellType?.stoneCell) {
       this.stoneDamage[new_x][new_y]++;
       this.lastMined[new_x][new_y] = this.tickNumber;
 
       if (this.stoneDamage[new_x][new_y] == STONE_HP) {
         // stone dead
-        new_cell.cellType = proto.CellType.create({ emptyCell: {} });
+        newCell.cellType = proto.CellType.create({ emptyCell: {} });
         this.gridUpdateCoordinates.push(proto.Coordinates.create({
           x: new_x, y: new_y
         }))

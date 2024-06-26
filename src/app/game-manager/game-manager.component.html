@@ -19,6 +19,9 @@
         <button *ngIf="!isPlaying" class="btn btn-block btn-primary" (click)="gameTick()">Tick</button>
         <button *ngIf="!isPlaying" class="btn btn-block btn-primary" (click)="gameStep()">Step</button>
         <button *ngIf="isPlaying" class="btn btn-block btn-danger" (click)="gamePause()">Pause</button>
+        <div class="mt-2">
+          Score<br><input type="text" class="form-control" readonly value="{{this.score}}"> 
+        </div>
       </div>
       <div class="col-sm-8" style="display: flex; align-items: center; flex-direction: column;">
         <app-grid-renderer [grid]="game.grid!"></app-grid-renderer>

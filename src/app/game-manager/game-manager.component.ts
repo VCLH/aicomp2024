@@ -29,6 +29,7 @@ export class GameManagerComponent {
   locked: boolean = false;
   speed: number = 10;
   lastAutoPlay: number = Date.now();
+  score: number = 0;
 
   readonly BG_COLORS = BG_COLORS;
 
@@ -151,6 +152,7 @@ export class GameManagerComponent {
   }
 
   private updateStatistics() {
+    this.score = this.gameRunner!.computeScore();
     this.numVisitedCells = [0, 0, 0, 0, 0, 0, 0, 0];
     for (let i = 0; i < this.game!.height; ++i) {
       for (let j = 0; j < this.game!.width; ++j) {
