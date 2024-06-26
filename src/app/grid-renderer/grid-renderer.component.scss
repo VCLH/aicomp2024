@@ -82,7 +82,8 @@
       }
 
       &.stone .tile {
-        background-position-y: 0px;
+        background-position-y: -32px;
+        background-position-x: -16px;
       }
     }
   }
