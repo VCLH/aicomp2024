@@ -7,25 +7,28 @@
     <div class="pressure" [style.backgroundPositionX]="-playerInfo.signal * 16 + 'px'"></div>
   </div>
 </div>
-<div class="grid" [style.width]="grid.rows.length * 16 + 'px'" [style.height]="grid.rows[0].length * 16 + 'px'">
+<div class="grid" [style.width]="grid.rows.length * 16 + 'px'" [style.height]="grid.rows.length * 16 + 'px'">
   <div *ngFor="let row of grid.rows" class="game-row">
     <div *ngFor="let cell of row.cells"
       class="cell"
-      [class.bedrock]="cell.cellType.bedrockCell"
-      [class.stone]="cell.cellType.stoneCell"
+      [class.bedrock]="cell.cellType?.bedrockCell"
+      [class.stone]="cell.cellType?.stoneCell"
       [style.background]="cell.firstVisitPlayer ? BG_COLORS[cell.firstVisitPlayer] : ''">
       <div class="overlay tile" [style.backgroundPositionX]="stoneLifeStyle(cell, grid.stoneLife)"></div>
-      <div class="overlay pressure" *ngIf="cell.cellType.pressurePlateCell" [style.backgroundPositionX]="-cell.cellType.pressurePlateCell.woodType * 16 + 'px'"></div>
-      <div class="overlay door-right" *ngIf="cell.cellType.emptyCell && cell.cellType.emptyCell.door && cell.cellType.emptyCell.door.direction == 1"  [style.backgroundPositionX]="-cell.cellType.emptyCell.door.woodType * 16 + 'px'"></div>
-      <div class="overlay door-up" *ngIf="cell.cellType.emptyCell && cell.cellType.emptyCell.door && cell.cellType.emptyCell.door.direction == 2"  [style.backgroundPositionX]="-cell.cellType.emptyCell.door.woodType * 16 + 'px'"></div>
-      <div class="overlay door-left" *ngIf="cell.cellType.emptyCell && cell.cellType.emptyCell.door && cell.cellType.emptyCell.door.direction == 3"  [style.backgroundPositionX]="-cell.cellType.emptyCell.door.woodType * 16 + 'px'"></div>
-      <div class="overlay door-down" *ngIf="cell.cellType.emptyCell && cell.cellType.emptyCell.door && cell.cellType.emptyCell.door.direction == 4"  [style.backgroundPositionX]="-cell.cellType.emptyCell.door.woodType * 16 + 'px'"></div>
-      <div class="overlay chest" *ngIf="cell.cellType.chestCell">{{ cell.cellType.chestCell.score }}</div>
       <div class="visited" *ngIf="cell.firstVisitPlayer" [style.backgroundColor]="BG_COLORS[cell.firstVisitPlayer]"></div>
+      <div class="overlay pressure" *ngIf="cell.cellType?.pressurePlateCell" [style.backgroundPositionX]="-cell.cellType!.pressurePlateCell!.woodType * 16 + 'px'"></div>
+      <div class="overlay" *ngIf="cell.cellType?.emptyCell?.door"
+           [class.door-right]="cell.cellType!.emptyCell!.door!.direction == 1"  
+           [class.door-up]="cell.cellType!.emptyCell!.door!.direction == 2"
+           [class.door-left]="cell.cellType!.emptyCell!.door!.direction == 3"
+           [class.door-down]="cell.cellType!.emptyCell!.door!.direction == 4"
+           [class.door-opened]="cell.cellType!.emptyCell!.door!.isOpen"
+           [style.backgroundPositionX]="-cell.cellType!.emptyCell!.door!.woodType * 16 + 'px'"></div>
+      <div class="overlay chest" *ngIf="cell.cellType?.chestCell" [class.opened]="cell.cellType!.chestCell!.isOpened">{{ cell.cellType!.chestCell!.score }}</div>
     </div>
   </div>
   <div class="players">
-    <div *ngFor="let playerInfo of grid.playerInfos" class="player" [style.transform]="'translate(' + playerInfo.position.y * 16 + 'px,' + playerInfo.position.x * 16 + 'px)'">
+    <div *ngFor="let playerInfo of grid.playerInfos" class="player" [style.transform]="'translate(' + playerInfo.position!.y * 16 + 'px,' + playerInfo.position!.x * 16 + 'px)'">
       <div class="avatar" [style.backgroundPositionX]="-(playerInfo.player - 1) * 16 + 'px'"></div>
     </div>
   </div>

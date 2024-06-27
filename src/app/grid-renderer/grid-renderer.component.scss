@@ -71,6 +71,10 @@
         top: -9px;
       }
 
+      .door-opened {
+        opacity: 0.35;
+      }
+
       .chest {
         background-position-x: -160px;
         background-position-y: -32px;
@@ -78,6 +82,10 @@
         color: white;
         padding-top: 4px;
         font-family: Verdana;
+
+        &.opened {
+          opacity: 0.35;
+        }
       }
 
       .tile {

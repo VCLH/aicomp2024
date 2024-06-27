@@ -325,7 +325,7 @@ export class GameRunner {
       for (const c of this.getAllDoors(woodType)) {
         const doorCell = this.game.grid!.rows[c.x].cells[c.y];
         const door = doorCell.cellType!.emptyCell!.door!;
-        door.isOpen = false;
+        door.isOpen = true;
         if (!this.playerView[c.x].cells[c.y].cellType?.invisibleCell) {
           this.gridUpdateCoordinates.push(proto.Coordinates.create({
             x: c.x, y: c.y
