@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import * as proto from '../game';
-import { BG_COLORS } from '../constants';
+import { BG_COLORS, FG_COLORS } from '../constants';
 import { Strategy } from '../strategy/strategy';
 import { BotConfig } from '../types';
 import { GameRunner } from '../game/game_runner';
@@ -20,18 +20,19 @@ export class GameManagerComponent {
   bots: Map<proto.Player, Strategy> = new Map;
   game: proto.Game | null = null;
   isValidPlayer: boolean[] = [false, false, false, false, false, false, false, false];
-  numVisitedCells: number[] = [0, 0, 0, 0, 0, 0, 0, 0];
+  numVisitedCells: number[] = [0, 0, 0, 0, 0, 0, 0, 0, 0];
   botConfigs: Map<proto.Player, BotConfig> = new Map;
-  remainingTimes: number[] = [0, 0, 0, 0, 0, 0, 0, 0];
-
+  
   isPlaying: boolean = false;
   gameRunner: GameRunner | null = null;
   locked: boolean = false;
   speed: number = 10;
   lastAutoPlay: number = Date.now();
   score: number = 0;
+  chestScore: number = 0;
 
   readonly BG_COLORS = BG_COLORS;
+  readonly FG_COLORS = FG_COLORS;
 
   constructor(private message: MessageService) {
     const timerSource = timer(0, 1);
@@ -153,17 +154,18 @@ export class GameManagerComponent {
 
   private updateStatistics() {
     this.score = this.gameRunner!.computeScore();
-    this.numVisitedCells = [0, 0, 0, 0, 0, 0, 0, 0];
+    this.numVisitedCells = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    this.chestScore = 0;
     for (let i = 0; i < this.game!.height; ++i) {
       for (let j = 0; j < this.game!.width; ++j) {
         const cell = this.game!.grid!.rows[i].cells[j];
         if (cell.firstVisitPlayer != proto.Player.INVALID) {
-          this.numVisitedCells[cell.firstVisitPlayer - 1]++;
+          this.numVisitedCells[cell.firstVisitPlayer]++;
+        }
+        if (cell.cellType?.chestCell?.isOpened) {
+          this.chestScore += cell.cellType!.chestCell!.score;
         }
       }
     }
-    this.game!.grid!.playerInfos.forEach(({ player, remainingTimeMs }) => {
-      this.remainingTimes[player - 1] = remainingTimeMs;
-    });
   }
 }

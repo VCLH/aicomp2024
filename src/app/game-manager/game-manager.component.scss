@@ -1,10 +1,22 @@
+.game-panel {
+  display: flex;
+}
+
+.game-left {
+  width: 120px;
+}
+
+.game-mid {
+  flex: 1;
+}
+
 .speed {
   font-size: 16px;
   padding-top: 6px;
 }
 
 .current-tick {
-  font-size: 30px;
+  font-size: 28px;
   text-align: center;
 }
 
@@ -12,4 +24,64 @@
   padding-top: 8px;
   font-size: 16px;
   text-align: center;
+}
+
+
+.signals {
+  width: 400px;
+
+  .signal-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-evenly;
+    margin-bottom: 8px;
+    font-size: 20px;
+
+    .signal {
+      width: 32px;
+      height: 32px;
+      margin: 0 12px;
+      background-position-y: -96px;
+      background-image: url('/assets/blocks.webp');
+      background-size: 352px 128px;
+    }
+
+    .total-score {
+      flex: 1;
+      font-size: 28px;
+    }
+    .player-metadata {
+       display: flex;
+       padding: 8px;
+
+      .player {
+        margin-right: 12px;
+        width: 32px;
+        height: 32px;
+        background-image: url('/assets/avatars.webp');
+        background-size: 256px 32px;
+      }
+
+      .chest {
+        width: 32px;
+        height: 32px;
+        margin-right: 12px;
+        background-position-x: -320px;
+        background-position-y: -64px;
+        background-image: url('/assets/blocks.webp');
+        background-size: 352px 128px;
+      }
+
+      .player-score {
+        width: 50px;
+        text-align: right;
+        margin-right: 12px;
+      }
+
+      .player-debug {
+        width: 60px;
+      }
+    }
+  }
 }

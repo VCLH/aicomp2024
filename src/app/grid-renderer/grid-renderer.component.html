@@ -1,12 +1,4 @@
 <div *ngIf="grid != null"class="game-container"> 
-<div class="signals">
-  <div class="mt-2 mr-4"><h5> Stone Life: {{ grid.stoneLife || 5 }}</h5></div>
-  <div class="mt-2 mr-2"><h5> Signals </h5></div>
-  <div *ngFor="let playerInfo of grid.playerInfos" class="signal" [style.backgroundColor]="BG_COLORS[playerInfo.player]">
-    <div class="player" [style.backgroundPositionX]="-(playerInfo.player - 1) * 16 + 'px'" ></div>
-    <div class="pressure" [style.backgroundPositionX]="-playerInfo.signal * 16 + 'px'"></div>
-  </div>
-</div>
 <div class="grid" [style.width]="grid.rows.length * 16 + 'px'" [style.height]="grid.rows.length * 16 + 'px'">
   <div *ngFor="let row of grid.rows" class="game-row">
     <div *ngFor="let cell of row.cells"

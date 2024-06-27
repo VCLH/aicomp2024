@@ -13,6 +13,7 @@
     text-decoration: none;
     text-shadow: 0 1px 0 #ffffff;
     outline: 0;
+    width: 80px !important;
 }
 
 .activebutton {
@@ -21,6 +22,7 @@
     border: 1px solid #84bbf3;
     color: #ffffff;
     text-shadow: 0 1px 0 #528ecc;
+    width: 80px !important;
 }
 
 #content-wrapper {
@@ -33,4 +35,8 @@
     bottom: 20px;
     width: 300px;
     z-index: 999;
+}
+
+.sidebar {
+    width: 80px !important;
 }

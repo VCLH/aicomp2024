@@ -66,9 +66,9 @@ export class GameRunner {
         for (const cell of row.cells) {
           if (cell.firstVisitPlayer > 0) {
             sum++;
-            if (cell.cellType?.chestCell) {
-              sum += cell.cellType.chestCell.score;
-            }
+          }
+          if (cell.cellType?.chestCell?.isOpened) {
+            sum += cell.cellType.chestCell.score;
           }
         }
       }
@@ -122,12 +122,9 @@ export class GameRunner {
     if (action?.mine) {
       this.handleMine(player, action.mine);
     }
-    if (action?.signal) {
-      // handle signal
-      const playerInfo = this.playerInfos?.get(player);
-      if (playerInfo) {
-        playerInfo.signal = action.signal;
-      }
+    const playerInfo = this.playerInfos?.get(player);
+    if (playerInfo) {
+      playerInfo.signal = action?.signal || proto.WoodType.NO_TYPE;
     }
 
     if (this.tickSequence.length == 0) {
