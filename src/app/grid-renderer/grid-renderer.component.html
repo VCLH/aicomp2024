@@ -21,6 +21,7 @@
       <div class="overlay door-left" *ngIf="cell.cellType.emptyCell && cell.cellType.emptyCell.door && cell.cellType.emptyCell.door.direction == 3"  [style.backgroundPositionX]="-cell.cellType.emptyCell.door.woodType * 16 + 'px'"></div>
       <div class="overlay door-down" *ngIf="cell.cellType.emptyCell && cell.cellType.emptyCell.door && cell.cellType.emptyCell.door.direction == 4"  [style.backgroundPositionX]="-cell.cellType.emptyCell.door.woodType * 16 + 'px'"></div>
       <div class="overlay chest" *ngIf="cell.cellType.chestCell">{{ cell.cellType.chestCell.score }}</div>
+      <div class="visited" *ngIf="cell.firstVisitPlayer" [style.backgroundColor]="BG_COLORS[cell.firstVisitPlayer]"></div>
     </div>
   </div>
   <div class="players">
