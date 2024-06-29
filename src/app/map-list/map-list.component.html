@@ -18,7 +18,7 @@
           <td>{{ row.description }}</td>
           <td>{{ row.gameMap.lengthUnits }} units</td>
           <td>{{ row.gameMap.players.length }}</td>
-          <td>{{ row.gameMap.grid.stoneLife || 5 }}</td>
+          <td>{{ row.gameMap.grid!.stoneLife }}</td>
           <td>
             <button class="btn btn-sm btn-primary" (click)="viewMap(row.gameMap)">View</button>
             <button class="btn btn-sm btn-danger" (click)="deleteGameMap(row.id)">Delete</button>

@@ -8,6 +8,16 @@ import { MessageService } from '../message.service';
 import { timer } from 'rxjs';
 
 const TIME_LIMIT = 5000;
+const EVENT_TYPE_TO_SOUND : { [key: string]: string } = {
+  CHEST_OPENED : 'Chest_open',
+  PLAYER_MOVED : 'Stone_hit',
+  DOOR_OPENED : 'Wood_Door_open',
+  DOOR_CLOSED : 'Wood_Door_close',
+  PRESSURE_PLATE_ACTIVATED : 'P_activate',
+  PRESSURE_PLATE_DEACTIVATED : 'P_deactivate',
+  BLOCK_DAMAGED : 'Stone_dig',
+  BLOCK_MINED: 'Stone_mining'
+};
 
 @Component({
   selector: 'app-game-manager',
@@ -26,11 +36,14 @@ export class GameManagerComponent {
   isPlaying: boolean = false;
   gameRunner: GameRunner | null = null;
   locked: boolean = false;
-  speed: number = 10;
+  speed: number = 20;
   lastAutoPlay: number = Date.now();
   score: number = 0;
   chestScore: number = 0;
-
+  sounds: Map<string, AudioBuffer[]> = new Map;
+  audioContext: AudioContext;
+  playingSounds: Map<string, AudioBufferSourceNode> = new Map();
+  
   readonly BG_COLORS = BG_COLORS;
   readonly FG_COLORS = FG_COLORS;
 
@@ -39,7 +52,9 @@ export class GameManagerComponent {
     timerSource.subscribe(() => {
       this.autoplay();
     });
+    this.audioContext = new AudioContext();
   }
+
   ngOnChanges() {
     this.setupGame();
   }
@@ -48,6 +63,7 @@ export class GameManagerComponent {
     if (!this.gameConfig) {
       return;
     }
+    this.loadSounds();
     this.botConfigs = new Map<proto.Player, BotConfig>;
     for (const { player, description, strategy, config } of this.gameConfig.players) {
       this.botConfigs.set(player, { description, strategy, config });
@@ -124,6 +140,7 @@ export class GameManagerComponent {
     const ret = this.gameRunner.step();
     this.updateStatistics();
     this.locked = false;
+    this.handleEvents(this.gameRunner.getLastEvents());
     return ret;
   }
   gamePause() {
@@ -167,5 +184,114 @@ export class GameManagerComponent {
         }
       }
     }
+  }
+
+  private loadSounds() {
+    if (this.audioContext.state == 'suspended') {
+      this.audioContext.resume();
+    }
+    if (this.sounds.size > 0) {
+      return;
+    }
+    this.loadSound('Chest_open');
+    this.loadSound('P_activate');
+    this.loadSound('P_deactivate');
+    this.loadSound('Stone_dig', '1');
+    this.loadSound('Stone_dig', '2');
+    this.loadSound('Stone_dig', '3');
+    this.loadSound('Stone_dig', '4');
+    this.loadSound('Stone_hit', '1');
+    this.loadSound('Stone_hit', '2');
+    this.loadSound('Stone_hit', '3');
+    this.loadSound('Stone_hit', '4');
+    this.loadSound('Stone_hit', '5');
+    this.loadSound('Stone_hit', '6');
+    this.loadSound('Stone_mining', '1');
+    this.loadSound('Stone_mining', '2');
+    this.loadSound('Stone_mining', '3');
+    this.loadSound('Stone_mining', '4');
+    this.loadSound('Stone_mining', '5');
+    this.loadSound('Stone_mining', '6');
+    this.loadSound('Wooden_Door_close', '1');
+    this.loadSound('Wooden_Door_close', '2');
+    this.loadSound('Wooden_Door_close', '3');
+    this.loadSound('Wooden_Door_open', '1');
+    this.loadSound('Wooden_Door_open', '2');
+  }
+
+  private loadSound(key: string, suffix: string = '') {
+    const request = new XMLHttpRequest();
+    request.open('GET', '/assets/sounds/' + key + suffix + '.ogg', true);
+    request.responseType = 'arraybuffer';
+    request.onload = () => {
+      this.audioContext.decodeAudioData(request.response, (audioBuffer) => {
+        if (audioBuffer)
+          if (!this.sounds.has(key)) {
+            this.sounds.set(key, []);
+          }
+          this.sounds.get(key)!.push(audioBuffer);
+      });
+    };
+    request.send();
+  }
+
+  private handleEvents(events: proto.GameEvent[]) {
+    for (const event of events) {
+      if (event.eventType == proto.GameEventType.DOOR_CLOSED || event.eventType == proto.GameEventType.DOOR_OPENED) {
+        const key = proto.gameEventTypeFromJSON(event.eventType) + '_' + proto.woodTypeToJSON(event.woodType);
+        if (this.playingSounds.has(key)) {
+          continue;
+        }
+        const source = this.audioContext.createBufferSource();
+        const filename = event.eventType == proto.GameEventType.DOOR_CLOSED ? 'Wooden_Door_close' : 'Wooden_Door_open';
+        source.buffer = this.sounds.get(filename)![Math.floor(Math.random() * this.sounds.get(filename)!.length)];
+        // volume 30%
+        const volumeNode = this.audioContext.createGain();
+        volumeNode.gain.value = 1.0;
+        source.connect(volumeNode);
+        volumeNode.connect(this.audioContext.destination);
+        this.playSound(key, source);
+      } else if (event.eventType == proto.GameEventType.PLAYER_MOVED) {
+        const key = 'MOVE_' + proto.playerToJSON(event.player);
+        if (this.playingSounds.has(key)) {
+          continue;
+        }
+        const source = this.audioContext.createBufferSource();
+        const filename = 'Stone_hit';
+        source.buffer = this.sounds.get(filename)![Math.floor(Math.random() * this.sounds.get(filename)!.length)];
+        const panNode = this.audioContext.createStereoPanner();
+        panNode.pan.value = 2.0 * event.position!.y / (this.game!.width - 1) - 1.0;
+        source.connect(panNode);
+        panNode.connect(this.audioContext.destination);
+        this.playSound(key, source);
+      } else {
+        const key = proto.gameEventTypeFromJSON(event.eventType) + '_' + event.position!.x + '_' + event.position!.y;
+        if (this.playingSounds.has(key)) {
+          continue;
+        }
+        const source = this.audioContext.createBufferSource();
+        const filename = EVENT_TYPE_TO_SOUND[proto.gameEventTypeToJSON(event.eventType)];
+        source.buffer = this.sounds.get(filename)![Math.floor(Math.random() * this.sounds.get(filename)!.length)];
+        const panNode = this.audioContext.createStereoPanner();
+        panNode.pan.value = 2.0 * event.position!.y / (this.game!.width - 1) - 1.0;
+        source.connect(panNode);
+        // volume 30% if event type is mine
+        const volumeNode = this.audioContext.createGain();
+        volumeNode.gain.value = event.eventType == proto.GameEventType.BLOCK_DAMAGED ? 0.2 : 1.0;
+        panNode.connect(volumeNode);
+        volumeNode.connect(this.audioContext.destination);
+        this.playSound(key, source);
+      }
+    }
+  }
+
+  private playSound(key: string, source: AudioBufferSourceNode) {
+    setTimeout(() => {
+      source.stop();
+      source.disconnect();
+      this.playingSounds.delete(key);
+    }, 210);
+    source.start();
+    this.playingSounds.set(key, source);
   }
 }

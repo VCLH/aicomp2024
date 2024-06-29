@@ -41,6 +41,9 @@ export class GameRunner {
   // updates to be flushed
   private gridUpdateCoordinates: proto.Coordinates[] = [];
 
+  // Events in the last step
+  private lastEvents: proto.GameEvent[] = [];
+
   constructor(game: proto.Game, players: Map<proto.Player, Strategy>) {
     this.game = game;
     this.players = [];
@@ -111,6 +114,8 @@ export class GameRunner {
       this.tickSequence = Array.from(this.players);
     }
 
+    this.lastEvents = [];
+
     // get current player and act
     const player = this.tickSequence.shift()!;
 
@@ -178,6 +183,10 @@ export class GameRunner {
     } catch (e) {
 
     }
+  }
+
+  getLastEvents() {
+    return this.lastEvents;
   }
 
   private isCell(x: number, y: number) {
@@ -289,6 +298,12 @@ export class GameRunner {
       this.activePressurePlates.set(woodType, newNumPlayersOnPlate);
 
       if (newNumPlayersOnPlate == 0) {
+        this.lastEvents.push(proto.GameEvent.create({
+          eventType: proto.GameEventType.PRESSURE_PLATE_DEACTIVATED,
+          position: proto.Coordinates.create({
+            x, y
+          })
+        }));
         for (const c of this.getAllDoors(woodType)) {
           const doorCell = this.game.grid!.rows[c.x].cells[c.y];
           const door = doorCell.cellType!.emptyCell!.door!;
@@ -297,6 +312,10 @@ export class GameRunner {
             this.gridUpdateCoordinates.push(proto.Coordinates.create({
               x: c.x, y: c.y
             }))
+            this.lastEvents.push(proto.GameEvent.create({
+              eventType: proto.GameEventType.DOOR_CLOSED,
+              woodType
+            }));
           }
         }
       }
@@ -304,6 +323,13 @@ export class GameRunner {
 
     // update coordinates
     info.position = proto.Coordinates.create({ x: new_x, y: new_y });
+    this.lastEvents.push(proto.GameEvent.create({
+      eventType: proto.GameEventType.PLAYER_MOVED,
+      position: proto.Coordinates.create({
+        x: new_x, y: new_y
+      }),
+      player
+    }));
 
     // update visited
     if (newCell.firstVisitPlayer == proto.Player.INVALID) {
@@ -318,6 +344,12 @@ export class GameRunner {
     if (newCell.cellType?.pressurePlateCell) {
       const woodType = newCell.cellType.pressurePlateCell.woodType;
       this.activePressurePlates.set(woodType, 1 + (this.activePressurePlates.get(woodType) ?? 0));
+      this.lastEvents.push(proto.GameEvent.create({
+        eventType: proto.GameEventType.PRESSURE_PLATE_ACTIVATED,
+        position: proto.Coordinates.create({
+          x: new_x, y: new_y
+        })
+      }));
 
       for (const c of this.getAllDoors(woodType)) {
         const doorCell = this.game.grid!.rows[c.x].cells[c.y];
@@ -327,6 +359,10 @@ export class GameRunner {
           this.gridUpdateCoordinates.push(proto.Coordinates.create({
             x: c.x, y: c.y
           }))
+          this.lastEvents.push(proto.GameEvent.create({
+            eventType: proto.GameEventType.DOOR_OPENED,
+            woodType
+          }));
         }
       }
     }
@@ -348,6 +384,12 @@ export class GameRunner {
       this.gridUpdateCoordinates.push(proto.Coordinates.create({
         x: new_x, y: new_y
       }))
+      this.lastEvents.push(proto.GameEvent.create({
+        eventType: proto.GameEventType.CHEST_OPENED,
+        position: proto.Coordinates.create({
+          x: new_x, y: new_y
+        })
+      }));
     }
     if (newCell.cellType?.stoneCell) {
       this.stoneDamage[new_x][new_y]++;
@@ -360,6 +402,19 @@ export class GameRunner {
         this.gridUpdateCoordinates.push(proto.Coordinates.create({
           x: new_x, y: new_y
         }))
+        this.lastEvents.push(proto.GameEvent.create({
+          eventType: proto.GameEventType.BLOCK_MINED,
+          position: proto.Coordinates.create({
+            x: new_x, y: new_y
+          })
+        }));
+      } else {
+        this.lastEvents.push(proto.GameEvent.create({
+          eventType: proto.GameEventType.BLOCK_DAMAGED,
+          position: proto.Coordinates.create({
+            x: new_x, y: new_y
+          })
+        }));
       }
     }
   }

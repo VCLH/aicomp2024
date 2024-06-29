@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { BG_COLORS } from '../constants';
 import { GameGenerator } from '../game/game_generator';
 import * as proto from '../game';
-import { GameRunner } from '../game/game_runner';
 import { DataService } from '../data.service';
 import { GameMapRow } from '../types';
 import { Buffer } from 'buffer';

@@ -18,7 +18,7 @@ export class GridRendererComponent {
     if (cell.cellType.stoneCell.mineCount == 0) {
       return '';
     }
-    const stage = Math.ceil(cell.cellType.stoneCell.mineCount * 6.0 / (stoneLife || 5));
+    const stage = Math.ceil(cell.cellType.stoneCell.mineCount * 6.0 / stoneLife);
     return -16 * stage + 'px';
   }
 }

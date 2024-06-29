@@ -129,3 +129,20 @@ message GameConfig {
   GameMap game_map = 2;
   int32 game_length = 3;
 }
+enum GameEventType {
+  INVALID_EVENT = 0;
+  CHEST_OPENED = 1;
+  PLAYER_MOVED = 2;
+  DOOR_OPENED = 3;
+  DOOR_CLOSED = 4;
+  PRESSURE_PLATE_ACTIVATED = 5;
+  PRESSURE_PLATE_DEACTIVATED = 6;
+  BLOCK_DAMAGED = 7;
+  BLOCK_MINED = 8;
+}
+message GameEvent {
+  GameEventType event_type = 1;
+  Coordinates position = 2;
+  Player player = 3;
+  WoodType wood_type = 4;
+}
