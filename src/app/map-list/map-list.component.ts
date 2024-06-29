@@ -16,8 +16,8 @@ export class MapListComponent {
     units: '4',
     haveChest: false,
     numWoodType: '2',
-    pressurePlateDensity: '70',
-    doorDensity: '60',
+    pressurePlateDensity: '80',
+    doorDensity: '70',
     minChestReward: '25',
     maxChestReward: '50',
     stoneLife: '15',
@@ -102,7 +102,7 @@ export class MapListComponent {
     this.generatorConfig.haveChest = stage == 'final';
     this.generatorConfig.numWoodType = stage == 'heat' ? '2' : '3';
     this.generatorConfig.units = stage == 'heat' ? '4' : '5';
-    this.generatorConfig.pressurePlateDensity = stage == 'heat' ? '70' : '75';
-    this.generatorConfig.doorDensity = stage == 'heat' ? '60' : '70';
+    this.generatorConfig.pressurePlateDensity = stage == 'heat' ? '80' : '75';
+    this.generatorConfig.doorDensity = stage == 'heat' ? '70' : '80';
   }
 }
