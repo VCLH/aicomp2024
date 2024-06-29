@@ -7,7 +7,8 @@ import { GameRunner } from '../game/game_runner';
 import { MessageService } from '../message.service';
 import { timer } from 'rxjs';
 
-const TIME_LIMIT = 5000;
+const TIME_LIMIT_PER_TICK = 10;
+
 const EVENT_TYPE_TO_SOUND : { [key: string]: string } = {
   CHEST_OPENED : 'Chest_open',
   PLAYER_MOVED : 'Stone_hit',
@@ -107,7 +108,7 @@ export class GameManagerComponent {
     for (const i in gameConfig.players) {
       const playerInfo = game.grid!.playerInfos[i];
       playerInfo.player = gameConfig.players[i].player;
-      playerInfo.remainingTimeMs = TIME_LIMIT;
+      playerInfo.remainingTimeMs = TIME_LIMIT_PER_TICK * gameConfig.gameLength;
     }
     return game;
   }
