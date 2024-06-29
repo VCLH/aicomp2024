@@ -76,21 +76,18 @@ class SampleStrategy implements Strategy {
       }
     }
 
-    // Consider mining
+    // Consider mining. Note that unopened chests can be mined.
     for (let dir = 1; dir <= 4; ++dir) {
       const newX = x + DX[dir];
       const newY = y + DY[dir];
       const newCellType = this.grid.rows[newX].cells[newY].cellType;
-      if (newCellType?.stoneCell) {
+      if (newCellType?.stoneCell || newCellType?.chestCell && !newCellType?.chestCell.isOpened) {
         possibleActions.push(proto.Action.create({ mine: proto.directionFromJSON(dir) }));
       }
     }
 
-    if (!possibleActions.length) {
-      return null;
-    }
     // Score all the actions
-    let bestAction = null;
+    let bestAction = proto.Action.create();
     let bestScore = 0.0;
     for (const candidateAction of possibleActions) {
       const candidateScore = this.scoreAction(candidateAction);
@@ -99,9 +96,15 @@ class SampleStrategy implements Strategy {
         bestScore = candidateScore;
       }
     }
+
+    // Example use of signal
     if (bestAction && blockedByWoodType) {
       bestAction.signal = blockedByWoodType;
     }
+  
+    // Use the following code to unset signal
+    // bestAction.signal = proto.WoodType.INVALID;
+
     return bestAction;
   }
 

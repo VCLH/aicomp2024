@@ -15,7 +15,7 @@ export class PlayComponent {
   bots: BotRow[] = [];
   selectedMap: number = 0;
   selectedBots: number[] = [0, 0, 0, 0, 0, 0, 0, 0];
-  selectedLength: number = 200;
+  selectedLength: number = 500;
   gameConfig: proto.GameConfig | null = null;
 
   readonly getPlayerName = proto.playerFromJSON;
@@ -70,6 +70,10 @@ export class PlayComponent {
       this.message.addMessage("Error decoding game config data in local storage.");
       return;
     }
+  }
+
+  resetBots() {
+    this.selectedBots = [0, 0, 0, 0, 0, 0, 0, 0];
   }
 
   private getGameConfig() {

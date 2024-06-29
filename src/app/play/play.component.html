@@ -1,7 +1,7 @@
 <h3>Start new game</h3>
 <div class="form-group row">
-  <label class="col-sm-2 col-form-label">Map</label>
-  <select class="form-control col-sm-2" [(ngModel)]="selectedMap">
+  <label class="col-sm-1 col-form-label">Map</label>
+  <select class="form-control col-sm-3" [(ngModel)]="selectedMap">
     <option *ngFor="let gameMap of gameMaps" [value]="gameMap.id">{{ gameMap.description }} ({{
       gameMap.gameMap.players.length }} players)</option>
   </select>
@@ -15,7 +15,10 @@
   </div>
 </div>
 <div class="form-group row">
-  <label class="col-sm-2 col-form-label">Bots</label>
+  <label class="col-sm-1 col-form-label">Bots</label>
+  <div class="col-sm-1">
+    <button class="btn btn-primary" (click)="resetBots()">Reset</button>
+  </div>
   <ng-container *ngFor="let item of selectedBots; let i = index; trackBy: trackByIndex">
     <select class="form-control col-sm-1" [(ngModel)]="selectedBots[i]" [style.background]="BG_COLORS[i + 1]"
       [style.color]="FG_COLORS[i + 1]">

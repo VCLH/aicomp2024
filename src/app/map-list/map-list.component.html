@@ -35,13 +35,8 @@
           <label class="col-sm-2 col-form-label">Players</label>
           <input type="number" class="form-control col-sm-2" [(ngModel)]="generatorConfig.numPlayers">
           <div class="col-sm-1"></div>
-          <button class="btn btn-sm btn-primary col-sm-1" (click)="usePreset(2)">2</button>
-          <button class="btn btn-sm btn-primary col-sm-1" (click)="usePreset(3)">3</button>
-          <button class="btn btn-sm btn-primary col-sm-1" (click)="usePreset(4)">4</button>
-          <button class="btn btn-sm btn-primary col-sm-1" (click)="usePreset(5)">5</button>
-          <button class="btn btn-sm btn-primary col-sm-1" (click)="usePreset(6)">6</button>
-          <button class="btn btn-sm btn-primary col-sm-1" (click)="usePreset(7)">7</button>
-          <button class="btn btn-sm btn-primary col-sm-1" (click)="usePreset(8)">8</button>
+          <button class="btn btn-sm btn-primary col-sm-1" (click)="usePreset('heat')">Heat</button>&nbsp;
+          <button class="btn btn-sm btn-primary col-sm-1" (click)="usePreset('final')">Final</button>
         </div>
         <div class="form-group row">
           <label class="col-sm-2 col-form-label">Units</label>

@@ -3,7 +3,7 @@
   <div class="col-sm-12">
     <div class="game-panel" *ngIf="game != null">
       <div class="game-left">
-        <p class="current-tick">{{ this.game.currentTick }} / {{ this.gameConfig!.gameLength }}</p>
+        <p class="current-tick">{{ this.game.currentTick }}<br>/ {{ this.gameConfig!.gameLength }}</p>
         <p class="stone-life">Stone Life: {{ game.grid!.stoneLife }}</p>
         <div class="row">
           <div class="col-sm-4 speed">Speed</div>

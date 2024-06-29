@@ -7,7 +7,7 @@ import { GameRunner } from '../game/game_runner';
 import { MessageService } from '../message.service';
 import { timer } from 'rxjs';
 
-const TIME_LIMIT = 20000;
+const TIME_LIMIT = 5000;
 
 @Component({
   selector: 'app-game-manager',

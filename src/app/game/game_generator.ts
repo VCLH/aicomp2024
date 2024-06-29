@@ -180,7 +180,7 @@ export class GameGenerator {
     }
     console.log(possiblePlates);
     shuffleArray(possiblePlates);
-    const nPlates = Math.floor(possiblePlates.length * pressurePlateDensity / 100);
+    const nPlates = Math.min(possiblePlates.length, Math.floor(config.lengthUnits * config.lengthUnits * pressurePlateDensity / 100));
     for (let i = 0; i < nPlates; ++i) {
       const plate = possiblePlates[i];
       // Ensure each type has a plate

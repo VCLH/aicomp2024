@@ -14,14 +14,14 @@ import { Buffer } from 'buffer';
 export class MapListComponent {
   generatorConfig = {
     numPlayers: 2,
-    units: '3',
-    haveChest: true,
+    units: '4',
+    haveChest: false,
     numWoodType: '2',
     pressurePlateDensity: '70',
-    doorDensity: '35',
+    doorDensity: '60',
     minChestReward: '25',
     maxChestReward: '50',
-    stoneLife: '10',
+    stoneLife: '15',
   }
   gameMap: proto.GameMap | null = null;
   grid: proto.Grid | null = null;
@@ -94,14 +94,16 @@ export class MapListComponent {
     this.grid = gameMap.grid!;
   }
 
-  public usePreset(numPlayers: number) {
+  public usePreset(stage: string) {
     /*
     2-3 players: 3 units
     4+ players: 4 units, density = 40, 20
     */
-    this.generatorConfig.numPlayers = numPlayers;
-    this.generatorConfig.units = numPlayers <= 3 ? '3' : '4';
-    this.generatorConfig.pressurePlateDensity = numPlayers <= 3 ? '70' : '50';
-    this.generatorConfig.doorDensity = numPlayers <= 3 ? '35' : '25';
+    this.generatorConfig.numPlayers = 2;
+    this.generatorConfig.haveChest = stage == 'final';
+    this.generatorConfig.numWoodType = stage == 'heat' ? '2' : '3';
+    this.generatorConfig.units = stage == 'heat' ? '4' : '5';
+    this.generatorConfig.pressurePlateDensity = stage == 'heat' ? '70' : '75';
+    this.generatorConfig.doorDensity = stage == 'heat' ? '60' : '70';
   }
 }
