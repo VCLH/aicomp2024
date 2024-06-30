@@ -395,13 +395,12 @@ export class GameRunner {
       this.stoneDamage[new_x][new_y]++;
       newCell.cellType.stoneCell.mineCount++;
       this.lastMined[new_x][new_y] = this.tickNumber;
-
+      this.gridUpdateCoordinates.push(proto.Coordinates.create({
+        x: new_x, y: new_y
+      }))
       if (this.stoneDamage[new_x][new_y] == (this.game!.grid!.stoneLife || DEFAULT_STONE_HP)) {
         // stone dead
         newCell.cellType = proto.CellType.create({ emptyCell: {} });
-        this.gridUpdateCoordinates.push(proto.Coordinates.create({
-          x: new_x, y: new_y
-        }))
         this.lastEvents.push(proto.GameEvent.create({
           eventType: proto.GameEventType.BLOCK_MINED,
           position: proto.Coordinates.create({
